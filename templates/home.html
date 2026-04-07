@@ -25,30 +25,36 @@
 </div>
 
 {# CTA: verificar obrigatoriedade #}
-<div class="mt-8 bg-white rounded-2xl border-2 border-blue-100 shadow-md shadow-slate-200/50 hover:shadow-lg transition-shadow px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-5 relative overflow-hidden">
-  <!-- Acento lateral piscando -->
-  <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-blue-500 to-brand animate-pulse"></div>
-  <!-- Ponto piscando no canto superior direito -->
-  <span class="absolute top-3 right-3 flex h-3 w-3">
-    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
-    <span class="relative inline-flex rounded-full h-3 w-3 bg-brand"></span>
-  </span>
-  <div class="flex items-center gap-4 pl-2">
-    <div class="w-12 h-12 bg-blue-50/80 rounded-xl flex items-center justify-center flex-shrink-0 border border-blue-100">
-      <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-      </svg>
+<style>
+@keyframes border-sweep {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.banner-sweep-border {
+  background: linear-gradient(90deg, #dbeafe 30%, #3b82f6 50%, #dbeafe 70%);
+  background-size: 200% auto;
+  animation: border-sweep 2.5s linear infinite;
+}
+</style>
+<div class="mt-8 banner-sweep-border p-[2px] rounded-2xl shadow-md shadow-slate-200/50">
+  <div class="bg-white rounded-[14px] px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-5 relative overflow-hidden">
+    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-blue-500 to-brand"></div>
+    <div class="flex items-center gap-4 pl-2">
+      <div class="w-12 h-12 bg-blue-50/80 rounded-xl flex items-center justify-center flex-shrink-0 border border-blue-100">
+        <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div>
+        <p class="font-bold text-gray-800 text-base">Não sabe se precisa declarar este ano?</p>
+        <p class="text-gray-500 text-sm mt-0.5">Responda 4 perguntas rápidas e descubra na hora — baseado nas regras da Receita Federal.</p>
+      </div>
     </div>
-    <div>
-      <p class="font-bold text-gray-800 text-base">Não sabe se precisa declarar este ano?</p>
-      <p class="text-gray-500 text-sm mt-0.5">Responda 4 perguntas rápidas e descubra na hora — baseado nas regras da Receita Federal.</p>
-    </div>
+    <a href="{% url 'verificar_obrigatoriedade' %}"
+       class="flex-shrink-0 bg-brand text-white px-6 py-3 rounded-xl text-sm font-semibold shadow-md shadow-brand/20 hover:bg-blue-700 hover:-translate-y-0.5 transition-all whitespace-nowrap w-full sm:w-auto text-center">
+      Verificar agora →
+    </a>
   </div>
-  <a href="{% url 'verificar_obrigatoriedade' %}"
-     class="flex-shrink-0 relative bg-brand text-white px-6 py-3 rounded-xl text-sm font-semibold shadow-md shadow-brand/20 hover:bg-blue-700 hover:-translate-y-0.5 transition-all whitespace-nowrap w-full sm:w-auto text-center">
-    Verificar agora →
-    <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full animate-bounce">!</span>
-  </a>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
