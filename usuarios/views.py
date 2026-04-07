@@ -29,11 +29,6 @@ def login_view(request):
         password = request.POST.get('password', '')
         user = authenticate(request, username=username, password=password)
         if user:
-            if not user.email_verified:
-                return render(request, 'usuarios/login.html', {
-                    'erro_verificacao': True,
-                    'email': user.email,
-                })
             login(request, user)
             return redirect(request.GET.get('next', 'dashboard'))
         return render(request, 'usuarios/login.html', {'form': {'errors': True}})
@@ -72,15 +67,12 @@ def registro_view(request):
             first_name=first_name,
             last_name=last_name,
             cpf=cpf or None,
-            email_verified=False,
+            email_verified=True,
         )
 
-        _enviar_email_verificacao(request, user)
-
-        return render(request, 'usuarios/aguardando_verificacao.html', {
-            'email': email,
-            'first_name': first_name,
-        })
+        login(request, user)
+        messages.success(request, f'Bem-vindo, {first_name}! Sua conta foi criada com sucesso.')
+        return redirect('dashboard')
 
     return render(request, 'usuarios/registro.html')
 
