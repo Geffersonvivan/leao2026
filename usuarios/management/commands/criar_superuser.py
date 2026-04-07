@@ -7,13 +7,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         email = 'geffersonvivan@gmail.com'
-        if not Usuario.objects.filter(email=email).exists():
-            Usuario.objects.create_superuser(
-                username=email,
-                email=email,
-                password='Leao2026@admin',
-                email_verified=True,
-            )
-            self.stdout.write(self.style.SUCCESS(f'Superuser criado: {email}'))
-        else:
-            self.stdout.write(f'Usuário {email} já existe.')
+        user, created = Usuario.objects.get_or_create(
+            email=email,
+            defaults={'username': email, 'email_verified': True},
+        )
+        user.is_staff = True
+        user.is_superuser = True
+        user.email_verified = True
+        user.set_password('Leao2026@admin')
+        user.save()
+        status = 'criado' if created else 'atualizado para superuser'
+        self.stdout.write(self.style.SUCCESS(f'Superuser {status}: {email}'))
