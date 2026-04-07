@@ -144,7 +144,6 @@ def _enviar_email_verificacao(request, user):
     )
 
 
-@require_POST
 def logout_view(request):
     logout(request)
     return redirect('home')
