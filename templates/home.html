@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Calculadora IR — Declare seu IR sem complicação{% endblock %}
+{% block title %}Leão 2026 — Declare seu IR sem complicação{% endblock %}
 
 {% block content %}
 <div class="flex flex-col justify-center min-h-[calc(100vh-8rem)]">
@@ -25,9 +25,14 @@
 </div>
 
 {# CTA: verificar obrigatoriedade #}
-<div class="mt-8 bg-white rounded-2xl border border-gray-100 shadow-md shadow-slate-200/50 hover:shadow-lg transition-shadow px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-5 relative overflow-hidden">
-  <!-- Acento lateral sutil -->
-  <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-blue-500 to-brand"></div>
+<div class="mt-8 bg-white rounded-2xl border-2 border-blue-100 shadow-md shadow-slate-200/50 hover:shadow-lg transition-shadow px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-5 relative overflow-hidden">
+  <!-- Acento lateral piscando -->
+  <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-blue-500 to-brand animate-pulse"></div>
+  <!-- Ponto piscando no canto superior direito -->
+  <span class="absolute top-3 right-3 flex h-3 w-3">
+    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
+    <span class="relative inline-flex rounded-full h-3 w-3 bg-brand"></span>
+  </span>
   <div class="flex items-center gap-4 pl-2">
     <div class="w-12 h-12 bg-blue-50/80 rounded-xl flex items-center justify-center flex-shrink-0 border border-blue-100">
       <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,8 +45,9 @@
     </div>
   </div>
   <a href="{% url 'verificar_obrigatoriedade' %}"
-     class="flex-shrink-0 bg-brand text-white px-6 py-3 rounded-xl text-sm font-semibold shadow-md shadow-brand/20 hover:bg-blue-700 hover:-translate-y-0.5 transition-all whitespace-nowrap w-full sm:w-auto text-center">
+     class="flex-shrink-0 relative bg-brand text-white px-6 py-3 rounded-xl text-sm font-semibold shadow-md shadow-brand/20 hover:bg-blue-700 hover:-translate-y-0.5 transition-all whitespace-nowrap w-full sm:w-auto text-center">
     Verificar agora →
+    <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full animate-bounce">!</span>
   </a>
 </div>
 
