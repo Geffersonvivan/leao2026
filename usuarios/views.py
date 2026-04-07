@@ -62,6 +62,9 @@ def registro_view(request):
         if Usuario.objects.filter(email=email).exists():
             return render(request, 'usuarios/registro.html', {'erro': 'Este e-mail já está cadastrado.'})
 
+        if cpf and Usuario.objects.filter(cpf=cpf).exists():
+            return render(request, 'usuarios/registro.html', {'erro': 'Este CPF já está cadastrado.'})
+
         user = Usuario.objects.create_user(
             username=email,
             email=email,
