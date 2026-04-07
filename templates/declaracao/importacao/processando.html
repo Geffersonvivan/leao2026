@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Analisando PDF… — Calculadora IR{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto mt-16 text-center" x-data="processador()">
+
+  {# Ícone animado #}
+  <div class="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mx-auto mb-6 relative">
+    <svg class="w-10 h-10 text-brand animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    {# Spinner de borda #}
+    <div class="absolute inset-0 rounded-3xl border-4 border-brand/20 border-t-brand animate-spin"></div>
+  </div>
+
+  <h1 class="text-xl font-bold text-gray-900 mb-2">Analisando sua declaração…</h1>
+  <p class="text-gray-500 text-sm mb-2" x-text="etapa"></p>
+  <p class="text-xs text-gray-400">Isso leva alguns segundos. Não feche esta página.</p>
+
+  {# Barra de progresso simulada #}
+  <div class="w-full bg-gray-100 rounded-full h-1.5 mt-6 overflow-hidden">
+    <div
+      class="h-full bg-brand rounded-full transition-all duration-1000"
+      :style="`width: ${progresso}%`"
+    ></div>
+  </div>
+
+  {# Form que auto-submete via JS #}
+
+
+<script>
+function processador() {
+  return {
+    progresso: 5,
+    etapa: 'Lendo o PDF…',
+
+    init() {
+      const etapas = [
+        [0,    'Lendo o PDF…'],
+        [2000, 'Identificando rendimentos…'],
+        [4000, 'Verificando dependentes e deduções…'],
+        [6000, 'Reconhecendo bens e direitos…'],
+        [8000, 'Finalizando análise…'],
+      ];
+
+      // Animação de progresso e etapas
+      etapas.forEach(([delay, texto]) => {
+        setTimeout(() => { this.etapa = texto; }, delay);
+      });
+
+      // Incremento suave de progresso
+      const tick = setInterval(() => {
+        if (this.progresso < 85) this.progresso += 2;
+      }, 400);
+
+      // Checa o status no backend a cada 3 segundos (Polling)
+      const checarStatus = setInterval(() => {
+        fetch(`/declaracao/{{ declaracao.pk }}/importar/status/`)
+          .then(r => r.json())
+          .then(data => {
+            if (data.status === 'revisado') {
+              clearInterval(checarStatus);
+              window.location.href = `/declaracao/{{ declaracao.pk }}/importar/revisar/`;
+            } else if (data.status === 'erro') {
+              clearInterval(checarStatus);
+              window.location.href = `/declaracao/{{ declaracao.pk }}/importar/`;
+            }
+          })
+          .catch(err => console.error("Erro ao checar status:", err));
+      }, 3000);
+    },
+  };
+}
+</script>
+{% endblock %}

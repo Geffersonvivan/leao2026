@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Confirme seu e-mail — Leão 2026{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center px-4">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 max-w-md w-full">
+    <div class="text-5xl mb-4">📬</div>
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">Verifique seu e-mail</h1>
+
+    {% if reenviado %}
+    <p class="text-green-600 text-sm font-medium mb-3">E-mail reenviado com sucesso!</p>
+    {% else %}
+    <p class="text-gray-500 text-sm mb-3">
+      {% if first_name %}Olá, <strong>{{ first_name }}</strong>! {% endif %}
+      Enviamos um link de confirmação para:
+    </p>
+    {% endif %}
+
+    <p class="text-brand font-semibold text-base mb-6">{{ email }}</p>
+
+    <p class="text-gray-400 text-xs mb-8">
+      Clique no link do e-mail para ativar sua conta. O link expira em <strong>24 horas</strong>.<br>
+      Verifique também a caixa de spam.
+    </p>
+
+    <form method="post" action="{% url 'reenviar_verificacao' %}">
+      {% csrf_token %}
+      <input type="hidden" name="email" value="{{ email }}">
+      <button type="submit"
+        class="w-full border border-gray-300 text-gray-600 text-sm font-medium px-5 py-2.5 rounded-xl hover:bg-gray-50 transition">
+        Reenviar e-mail de confirmação
+      </button>
+    </form>
+
+    <p class="mt-5 text-xs text-gray-400">
+      Conta errada? <a href="{% url 'registro' %}" class="text-brand hover:underline">Criar nova conta</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% if video_ajuda %}
+<div class="mt-6" x-data="{ aberto: false }">
+  <button @click="aberto = !aberto"
+    class="flex items-center gap-2 text-sm text-brand hover:text-blue-700 font-medium transition">
+    <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M8 5v14l11-7z"/>
+    </svg>
+    <span x-text="aberto ? 'Fechar vídeo explicativo' : '{{ video_ajuda.titulo }}'"></span>
+    <svg class="w-4 h-4 transition-transform" :class="aberto ? 'rotate-180' : ''"
+         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <div x-show="aberto" x-transition class="mt-3 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+    <div x-if="aberto">
+      <iframe
+        src="{{ video_ajuda.embed_url }}"
+        class="w-full h-56 md:h-72"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </div>
+</div>
+{% endif %}

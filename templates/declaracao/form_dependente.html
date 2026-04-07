@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Adicionar Dependente — Calculadora IR{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto mt-8">
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-2">Adicionar Dependente</h2>
+    <p class="text-sm text-gray-400 mb-6">Dedução de R$ 2.275,08 por dependente.</p>
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Nome completo</label>
+        <input type="text" name="nome" required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+          placeholder="Nome do dependente">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+        <input type="text" name="cpf" maxlength="14" required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+          placeholder="000.000.000-00">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Data de nascimento</label>
+        <input type="date" name="data_nascimento" required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Grau de parentesco</label>
+        <select name="parentesco" required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+          <option value="">Selecione...</option>
+          <option value="conjuge">Cônjuge / Companheiro(a)</option>
+          <option value="filho">Filho(a) / Enteado(a)</option>
+          <option value="pai_mae">Pai / Mãe</option>
+          <option value="avo">Avô / Avó</option>
+          <option value="irmao">Irmão / Irmã</option>
+          <option value="menor_guarda">Menor sob Guarda / Tutela</option>
+          <option value="incapaz">Incapaz sob Tutela / Curatela</option>
+        </select>
+      </div>
+
+      {% if erro %}
+        <p class="text-red-600 text-sm">{{ erro }}</p>
+      {% endif %}
+
+      <div class="flex gap-3 pt-2">
+        <a href="{% url 'declaracao_detalhe' declaracao.pk %}"
+           class="flex-1 text-center border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50">
+          Cancelar
+        </a>
+        <button type="submit"
+          class="flex-1 bg-brand text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-blue-700 transition">
+          Salvar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

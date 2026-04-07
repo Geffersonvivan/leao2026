@@ -1,0 +1,296 @@
+{% if declaracao %}
+{% if analise_ia %}{{ analise_ia|json_script:"chat-analise-ia" }}{% endif %}
+<div
+  x-data="chatBubble('{{ declaracao.pk }}', '{{ passo_titulo|default:'' }}')"
+  @open-chat.window="open = true; if (messages.length === 0) welcome(); $nextTick(() => scrollBottom())"
+  class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3"
+>
+
+  {# ── Painel de chat ── #}
+  <div
+    x-show="open"
+    x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="opacity-0 translate-y-4"
+    x-transition:enter-end="opacity-100 translate-y-0"
+    x-transition:leave="transition ease-in duration-150"
+    x-transition:leave-start="opacity-100 translate-y-0"
+    x-transition:leave-end="opacity-0 translate-y-4"
+    class="w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden"
+    style="max-height: 540px; display: none;"
+  >
+    {# Header #}
+    <div class="flex items-center justify-between px-4 py-3 bg-brand text-white flex-shrink-0">
+      <div class="flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/>
+        </svg>
+        <span class="text-sm font-semibold">Assistente IR</span>
+      </div>
+      <button @click="open = false" class="text-white/70 hover:text-white transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    {# Messages #}
+    <div
+      x-ref="msgs"
+      class="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-gray-50"
+      style="min-height: 280px;"
+    >
+      <template x-for="(msg, i) in messages" :key="i">
+        <div
+          :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'"
+          :data-role="msg.role"
+        >
+          <div
+            :class="msg.role === 'user'
+              ? 'bg-brand text-white rounded-2xl rounded-tr-sm px-3 py-2 max-w-[85%] text-sm'
+              : 'bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-tl-sm px-3 py-2 max-w-[85%] text-sm'"
+            x-html="formatMsg(msg.text)"
+          ></div>
+        </div>
+      </template>
+
+      {# Chips de sugestão — visíveis só antes do 1º envio #}
+      <div
+        x-show="showSuggestions && suggestions.length > 0"
+        class="flex flex-col gap-2 pt-1"
+      >
+        <p class="text-xs text-gray-400 text-center">Perguntas frequentes nesta etapa</p>
+        <template x-for="(s, i) in suggestions" :key="i">
+          <button
+            @click="pickSuggestion(s)"
+            class="text-left text-xs bg-white border border-brand/30 text-brand rounded-xl px-3 py-2 hover:bg-brand/5 hover:border-brand transition leading-snug"
+            x-text="s"
+          ></button>
+        </template>
+      </div>
+
+      {# Loading dots #}
+      <div x-show="loading" class="flex justify-start">
+        <div class="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3">
+          <div class="flex gap-1 items-center">
+            <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0ms"></span>
+            <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay:150ms"></span>
+            <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay:300ms"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Input #}
+    <div class="flex items-end gap-2 px-3 py-3 border-t border-gray-100 bg-white flex-shrink-0">
+      <textarea
+        x-model="input"
+        @keydown="handleKey($event)"
+        placeholder="Escreva sua dúvida…"
+        rows="1"
+        class="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition"
+        style="max-height: 96px;"
+        :disabled="loading"
+      ></textarea>
+      <button
+        @click="send()"
+        :disabled="loading || !input.trim()"
+        class="flex-shrink-0 bg-brand text-white rounded-xl p-2 hover:bg-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  {# ── Botão flutuante ── #}
+  <button
+    @click="toggle()"
+    class="flex items-center gap-2 bg-brand text-white px-4 py-3 rounded-2xl shadow-lg hover:bg-blue-700 transition-all hover:scale-105 active:scale-95"
+    :class="open ? 'bg-blue-700' : ''"
+  >
+    <svg x-show="!open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/>
+    </svg>
+    <svg x-show="open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+    <span x-show="!open" class="text-sm font-semibold">Assistente</span>
+  </button>
+
+</div>
+
+<script>
+function chatBubble(pk, step) {
+
+  // Lê a análise aprofundada injetada pelo servidor (se disponível)
+  const _el = document.getElementById('chat-analise-ia');
+  const analiseIA = _el ? (JSON.parse(_el.textContent) || '') : '';
+
+  const SUGGESTIONS = {
+    'Perfil': [
+      'O que respondo nessa fase?',
+      'Qual a diferença entre Assalariado e Autônomo?',
+      'Preciso marcar "Tenho investimentos" para renda fixa?',
+      'Sou funcionário CLT mas também faço freelas — qual perfil escolho?',
+    ],
+    'Rendimentos': [
+      'O que respondo nessa fase?',
+      'Onde encontro meu informe de rendimentos?',
+      'Preciso declarar o 13º salário?',
+      'Como informo rendimento de aluguel?',
+      'O que é tributação exclusiva na fonte?',
+    ],
+    'Dependentes': [
+      'O que respondo nessa fase?',
+      'Meu filho maior de 21 anos pode ser dependente?',
+      'Posso incluir meus pais como dependentes?',
+      'Qual o valor de dedução por dependente?',
+    ],
+    'Deduções': [
+      'O que respondo nessa fase?',
+      'Quais despesas médicas posso deduzir?',
+      'Qual o limite de dedução com educação?',
+      'O que é PGBL e como funciona a dedução?',
+      'Posso deduzir plano de saúde?',
+    ],
+    'Bens': [
+      'O que respondo nessa fase?',
+      'Como declaro um imóvel financiado?',
+      'Preciso declarar saldo em conta corrente?',
+      'Qual valor informar para um carro — compra ou mercado?',
+    ],
+    'Revisão': [
+      'O que respondo nessa fase?',
+      'Qual a diferença entre modelo Simplificado e Completo?',
+      'Como sei se tenho imposto a pagar ou restituição?',
+      'O que verificar antes de finalizar?',
+    ],
+    'Auditoria': analiseIA ? [
+      'Quais são os riscos mais críticos?',
+      'Como corrigir os problemas identificados?',
+      'Posso enviar mesmo com esses alertas?',
+      'Qual o próximo passo recomendado?',
+    ] : [
+      'O que significa cada alerta?',
+      'O que é malha fina e como evitar?',
+      'Como corrigir um alerta de inconsistência?',
+      'Posso enviar mesmo com alertas de aviso?',
+    ],
+  };
+
+  const state = {
+    open: false,
+    analiseIA,
+    messages: [],
+    suggestions: SUGGESTIONS[step] || ['O que respondo nessa fase?', 'Como funciona essa declaração?'],
+    showSuggestions: true,
+    input: '',
+    loading: false,
+
+    init() {
+      // Expõe função global para abrir o chat de fora do Alpine
+      window.abrirAssistente = () => {
+        this.open = true;
+        if (this.messages.length === 0) this.welcome();
+        this.$nextTick(() => this.scrollBottom());
+      };
+    },
+
+    toggle() {
+      this.open = !this.open;
+      if (this.open && this.messages.length === 0) this.welcome();
+      if (this.open) this.$nextTick(() => this.scrollBottom());
+    },
+
+    welcome() {
+      const hints = {
+        'Perfil':      'Olá! Vou te ajudar a configurar seu perfil de contribuinte. Escolha abaixo ou escreva sua dúvida:',
+        'Rendimentos': 'Olá! Estou aqui para ajudar com rendimentos. Escolha uma pergunta ou escreva a sua:',
+        'Dependentes': 'Olá! Posso tirar dúvidas sobre dependentes. O que quer saber?',
+        'Deduções':    'Olá! Vou te ajudar a aproveitar todas as deduções possíveis. O que quer saber?',
+        'Bens':        'Olá! Posso ajudar com bens e direitos. Escolha uma pergunta ou escreva a sua:',
+        'Revisão':     'Olá! Estamos na revisão final. O que quer esclarecer antes de finalizar?',
+        'Auditoria':   this.analiseIA
+          ? 'Analisei sua declaração em detalhes. Tenho os resultados prontos — escolha uma pergunta ou escreva a sua dúvida:'
+          : 'Olá! Posso explicar qualquer alerta da auditoria. O que quer entender?',
+      };
+      const text = hints[step] || 'Olá! Sou o Assistente IR. Escolha uma pergunta ou escreva sua dúvida:';
+      this.messages.push({ role: 'assistant', text });
+    },
+
+    pickSuggestion(text) {
+      this.showSuggestions = false;
+      this.input = text;
+      this.send();
+    },
+
+    async send() {
+      const text = this.input.trim();
+      if (!text || this.loading) return;
+      this.showSuggestions = false;
+      this.messages.push({ role: 'user', text });
+      this.input = '';
+      this.loading = true;
+      this.$nextTick(() => this.scrollBottom()); // mostra as bolinhas
+
+      try {
+        const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const res = await fetch(`/assistente/${pk}/mensagem/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf,
+          },
+          body: JSON.stringify({ mensagem: text, passo: step, analise_resumo: this.analiseIA ? this.analiseIA.slice(0, 1500) : '' }),
+        });
+        const data = await res.json();
+        this.messages.push({ role: 'assistant', text: data.resposta || data.erro || 'Erro desconhecido.' });
+      } catch (_) {
+        this.messages.push({ role: 'assistant', text: 'Erro de conexão. Verifique sua internet e tente novamente.' });
+      }
+
+      this.loading = false;
+      this.$nextTick(() => this.scrollToResponse()); // posiciona no início da resposta
+    },
+
+    // Rola até o início da última mensagem do assistente
+    scrollToResponse() {
+      const el = this.$refs.msgs;
+      if (!el) return;
+      const bubbles = el.querySelectorAll('[data-role="assistant"]');
+      const last = bubbles[bubbles.length - 1];
+      if (last) {
+        el.scrollTop = last.offsetTop - el.offsetTop - 8;
+      }
+    },
+
+    // Rola até o fim (usado só ao enviar, para mostrar as bolinhas)
+    scrollBottom() {
+      const el = this.$refs.msgs;
+      if (el) el.scrollTop = el.scrollHeight;
+    },
+
+    handleKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        this.send();
+      }
+    },
+
+    formatMsg(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+    },
+  };
+  return state;
+}
+</script>
+{% endif %}

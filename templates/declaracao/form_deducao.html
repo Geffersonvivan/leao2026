@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Adicionar Dedução — Calculadora IR{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto mt-8">
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-2">Adicionar Dedução</h2>
+    <p class="text-sm text-gray-400 mb-6">Apenas modelo completo. O sistema calcula os limites automaticamente.</p>
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de dedução</label>
+        <select name="tipo" required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+          <option value="">Selecione...</option>
+          <option value="saude">Despesas Médicas / Saúde (sem limite)</option>
+          <option value="educacao">Educação (limite R$ 3.561,50/pessoa)</option>
+          <option value="inss">Previdência Social — INSS</option>
+          <option value="pgbl">Previdência Privada — PGBL (até 12% da renda)</option>
+          <option value="pensao_paga">Pensão Alimentícia Paga (judicial)</option>
+          <option value="livro_caixa">Livro-Caixa (autônomos)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+        <input type="text" name="descricao" required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+          placeholder="Ex: Consultas médicas Dr. Silva">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Valor (R$)</label>
+        <input type="number" name="valor" step="0.01" min="0" required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+          placeholder="0,00">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">CPF / CNPJ do beneficiário</label>
+        <input type="text" name="cpf_cnpj_beneficiario"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+          placeholder="Opcional — mas recomendado para evitar malha fina">
+      </div>
+
+      {% if erro %}
+        <p class="text-red-600 text-sm">{{ erro }}</p>
+      {% endif %}
+
+      <div class="flex gap-3 pt-2">
+        <a href="{% url 'declaracao_detalhe' declaracao.pk %}"
+           class="flex-1 text-center border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50">
+          Cancelar
+        </a>
+        <button type="submit"
+          class="flex-1 bg-brand text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-blue-700 transition">
+          Salvar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

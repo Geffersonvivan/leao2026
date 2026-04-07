@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Declaração {{ declaracao.ano_base }} — Calculadora IR{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div class="flex items-center gap-3">
+    <a href="{% url 'dashboard' %}" class="text-gray-400 hover:text-gray-600 text-sm">Dashboard</a>
+    <span class="text-gray-300">/</span>
+    <span class="text-gray-700 font-medium">Declaração {{ declaracao.ano_base }}</span>
+  </div>
+  <div class="flex items-center gap-2">
+    <a href="{% url 'documentos_upload' declaracao.pk %}"
+       class="text-sm border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-50">
+      Importar docs
+    </a>
+    <a href="{% url 'declaracao_auditoria' declaracao.pk %}"
+       class="flex items-center gap-1.5 text-sm border border-yellow-300 text-yellow-700 bg-yellow-50 px-3 py-1.5 rounded-lg hover:bg-yellow-100 transition">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+      </svg>
+      Auditar
+    </a>
+    <a href="{% url 'declaracao_exportar' declaracao.pk %}"
+       class="text-sm border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-50">
+      Exportar
+    </a>
+    <a href="{% url 'wizard_inicio' declaracao.pk %}"
+       class="text-sm bg-brand text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition">
+      Preencher wizard
+    </a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+  {% include "declaracao/partials/card_resultado.html" %}
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+  <!-- Rendimentos -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-gray-800">Rendimentos</h3>
+      <a href="{% url 'rendimento_novo' declaracao.pk %}"
+         class="text-xs text-brand hover:underline">+ Adicionar</a>
+    </div>
+    {% if declaracao.rendimentos.all %}
+      <ul class="space-y-2">
+        {% for r in declaracao.rendimentos.all %}
+        <li class="flex items-center justify-between text-sm">
+          <div>
+            <span class="font-medium text-gray-700">{{ r.fonte_pagadora_nome }}</span>
+            <span class="text-gray-400 text-xs ml-2">{{ r.get_tipo_display }}</span>
+          </div>
+          <span class="text-gray-800 font-mono">R$ {{ r.valor_bruto|floatformat:2 }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-gray-400 text-sm">Nenhum rendimento adicionado.</p>
+    {% endif %}
+  </div>
+
+  <!-- Deduções -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-gray-800">Deduções</h3>
+      <a href="{% url 'deducao_nova' declaracao.pk %}"
+         class="text-xs text-brand hover:underline">+ Adicionar</a>
+    </div>
+    {% if declaracao.deducoes.all %}
+      <ul class="space-y-2">
+        {% for d in declaracao.deducoes.all %}
+        <li class="flex items-center justify-between text-sm">
+          <div>
+            <span class="font-medium text-gray-700">{{ d.get_tipo_display }}</span>
+            <span class="text-gray-400 text-xs ml-2">{{ d.descricao|truncatechars:30 }}</span>
+          </div>
+          <span class="text-gray-800 font-mono">R$ {{ d.valor|floatformat:2 }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-gray-400 text-sm">Nenhuma dedução adicionada.</p>
+    {% endif %}
+  </div>
+
+  <!-- Dependentes -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-gray-800">Dependentes</h3>
+      <a href="{% url 'dependente_novo' declaracao.pk %}"
+         class="text-xs text-brand hover:underline">+ Adicionar</a>
+    </div>
+    {% if declaracao.dependentes.all %}
+      <ul class="space-y-2">
+        {% for dep in declaracao.dependentes.all %}
+        <li class="text-sm">
+          <span class="font-medium text-gray-700">{{ dep.nome }}</span>
+          <span class="text-gray-400 text-xs ml-2">{{ dep.get_parentesco_display }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-gray-400 text-sm">Nenhum dependente adicionado.</p>
+    {% endif %}
+  </div>
+
+  <!-- Assistente -->
+  <div class="bg-blue-50 rounded-2xl border border-blue-100 p-5 flex flex-col justify-between">
+    <div>
+      <h3 class="font-semibold text-blue-800 mb-1">Assistente IR</h3>
+      <p class="text-blue-600 text-sm">
+        Tem dúvidas sobre deduções, dependentes ou o que declarar? Pergunte ao assistente.
+      </p>
+    </div>
+    <a href="{% url 'assistente_chat' declaracao.pk %}"
+       class="mt-4 bg-brand text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-blue-700 transition text-center">
+      Abrir assistente
+    </a>
+  </div>
+
+</div>
+
+{% include "partials/_chat_bubble.html" with declaracao=declaracao %}
+{% endblock %}

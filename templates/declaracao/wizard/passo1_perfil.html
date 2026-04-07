@@ -1,0 +1,61 @@
+{% extends "declaracao/wizard/base_wizard.html" %}
+{% block wizard_content %}
+
+<a href="{% url 'verificar_obrigatoriedade' %}"
+   class="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 mb-5 text-sm hover:bg-blue-100 transition group">
+  <svg class="w-4 h-4 text-brand flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+  </svg>
+  <span class="text-brand font-medium">Ainda tem dúvida se precisa declarar?</span>
+  <span class="text-blue-400 ml-auto group-hover:translate-x-0.5 transition-transform">→</span>
+</a>
+
+<h2 class="text-xl font-bold text-gray-900 mb-1">Qual é o seu perfil?</h2>
+<p class="text-gray-400 text-sm mb-6">Isso nos ajuda a fazer as perguntas certas para você.</p>
+
+<form method="post">
+  {% csrf_token %}
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8" x-data="{ tipo: '{{ perfil.tipo_contribuinte|default:'' }}' }">
+
+    {% for valor, label in tipos %}
+    <label class="relative flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition
+      {% if perfil.tipo_contribuinte == valor %}border-brand bg-blue-50{% else %}border-gray-100 hover:border-gray-300{% endif %}">
+      <input type="radio" name="tipo_contribuinte" value="{{ valor }}"
+        class="mt-0.5 accent-brand"
+        {% if perfil.tipo_contribuinte == valor %}checked{% endif %}>
+      <span class="text-sm font-medium text-gray-800">{{ label }}</span>
+    </label>
+    {% endfor %}
+
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+    <label class="flex items-center gap-3 p-4 rounded-xl border border-gray-100 cursor-pointer hover:bg-gray-50">
+      <input type="checkbox" name="tem_dependentes" class="accent-brand w-4 h-4"
+        {% if perfil.tem_dependentes %}checked{% endif %}>
+      <span class="text-sm text-gray-700">Tenho dependentes</span>
+    </label>
+    <label class="flex items-center gap-3 p-4 rounded-xl border border-gray-100 cursor-pointer hover:bg-gray-50">
+      <input type="checkbox" name="tem_imoveis" class="accent-brand w-4 h-4"
+        {% if perfil.tem_imoveis %}checked{% endif %}>
+      <span class="text-sm text-gray-700">Tenho imóveis</span>
+    </label>
+    <label class="flex items-center gap-3 p-4 rounded-xl border border-gray-100 cursor-pointer hover:bg-gray-50">
+      <input type="checkbox" name="tem_investimentos" class="accent-brand w-4 h-4"
+        {% if perfil.tem_investimentos %}checked{% endif %}>
+      <span class="text-sm text-gray-700">Tenho investimentos</span>
+    </label>
+  </div>
+
+  <div class="flex justify-end">
+    <button type="submit"
+      class="bg-brand text-white px-8 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+      Próximo →
+    </button>
+  </div>
+</form>
+
+{% include "partials/video_ajuda.html" %}
+{% endblock %}

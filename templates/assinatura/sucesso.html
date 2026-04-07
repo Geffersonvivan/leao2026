@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Pagamento confirmado — Leão 2026{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center px-4">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 max-w-md w-full">
+
+    {% if assinatura and assinatura.ativa %}
+    <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+      </svg>
+    </div>
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">Pagamento confirmado!</h1>
+    <p class="text-gray-500 text-sm mb-2">
+      Seu plano <strong>{{ assinatura.plano.nome }}</strong> está ativo.
+    </p>
+    <p class="text-xs text-gray-400 mb-8">Válido até {{ assinatura.valida_ate|date:"d/m/Y" }}</p>
+    {% else %}
+    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-brand animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+      </svg>
+    </div>
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">Processando pagamento…</h1>
+    <p class="text-gray-500 text-sm mb-8">Aguarde alguns instantes. A página atualizará automaticamente.</p>
+    <meta http-equiv="refresh" content="5">
+    {% endif %}
+
+    <a href="{% url 'dashboard' %}"
+       class="inline-block bg-brand text-white px-8 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+      Ir para o dashboard
+    </a>
+  </div>
+</div>
+{% endblock %}

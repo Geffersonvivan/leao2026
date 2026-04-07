@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block title %}Revisar dados importados — Calculadora IR{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+
+  {# Breadcrumb #}
+  <div class="flex items-center gap-2 text-sm text-gray-400 mb-6">
+    <a href="{% url 'dashboard' %}" class="hover:text-gray-600">Dashboard</a>
+    <span>/</span>
+    <a href="{% url 'importacao_etapa0' declaracao.pk %}" class="hover:text-gray-600">Importar</a>
+    <span>/</span>
+    <span class="text-gray-700 font-medium">Revisar dados</span>
+  </div>
+
+  {# Header #}
+  <div class="bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4 mb-6 flex items-start gap-3">
+    <svg class="w-5 h-5 text-brand mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    <div>
+      <p class="text-sm font-semibold text-blue-900">Dados extraídos da declaração {{ ano_anterior }}</p>
+      <p class="text-xs text-blue-700 mt-0.5">
+        Verifique cada item abaixo. <strong>Confirme</strong> o que ainda é válido para {{ declaracao.ano_base }},
+        <strong>edite</strong> o que mudou ou <strong>descarte</strong> o que não se aplica mais.
+        Você é responsável pelos dados enviados à Receita Federal.
+      </p>
+    </div>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+
+    {# ── Rendimentos ── #}
+    {% if dados.rendimentos %}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm mb-5 overflow-hidden">
+      <div class="px-5 py-3 border-b border-gray-100 bg-gray-50">
+        <h2 class="font-semibold text-gray-800 text-sm">Rendimentos</h2>
+      </div>
+      {% for r in dados.rendimentos %}
+      <div class="px-5 py-4 border-b border-gray-50 last:border-0" x-data="{ modo: 'confirmar' }">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <p class="font-medium text-gray-800 text-sm">{{ r.fonte_pagadora_nome }}</p>
+              <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{{ r.tipo }}</span>
+            </div>
+            <p class="text-xs text-gray-500">
+              Bruto: <strong>R$ {{ r.valor_bruto }}</strong>
+              {% if r.ir_retido %} · IR retido: R$ {{ r.ir_retido }}{% endif %}
+              {% if r.inss_retido %} · INSS: R$ {{ r.inss_retido }}{% endif %}
+            </p>
+          </div>
+          {# Ações #}
+          <div class="flex gap-2 flex-shrink-0">
+            <button type="button" @click="modo = 'confirmar'"
+              :class="modo === 'confirmar' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-white text-gray-500 border-gray-200'"
+              class="text-xs border px-3 py-1.5 rounded-lg transition font-medium">
+              Confirmar
+            </button>
+            <button type="button" @click="modo = 'editar'"
+              :class="modo === 'editar' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 'bg-white text-gray-500 border-gray-200'"
+              class="text-xs border px-3 py-1.5 rounded-lg transition font-medium">
+              Editar
+            </button>
+            <button type="button" @click="modo = 'descartar'"
+              :class="modo === 'descartar' ? 'bg-red-100 text-red-600 border-red-200' : 'bg-white text-gray-500 border-gray-200'"
+              class="text-xs border px-3 py-1.5 rounded-lg transition font-medium">
+              Descartar
+            </button>
+          </div>
+        </div>
+
+        {# Campo oculto com a ação escolhida #}
+        <input type="hidden" name="rend_{{ forloop.index0 }}" :value="modo === 'descartar' ? 'descartar' : 'confirmar'">
+
+        {# Formulário de edição inline #}
+        <div x-show="modo === 'editar'" x-transition class="mt-3 grid grid-cols-2 gap-3 bg-yellow-50 rounded-xl p-4">
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Fonte pagadora</label>
+            <input type="text" name="rend_{{ forloop.index0 }}_nome" value="{{ r.fonte_pagadora_nome }}"
+              class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Tipo</label>
+            <select name="rend_{{ forloop.index0 }}_tipo"
+              class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+              <option value="salario" {% if r.tipo == "salario" %}selected{% endif %}>Salário</option>
+              <option value="autonomo" {% if r.tipo == "autonomo" %}selected{% endif %}>Autônomo</option>
+              <option value="aluguel" {% if r.tipo == "aluguel" %}selected{% endif %}>Aluguel</option>
+              <option value="aposentadoria" {% if r.tipo == "aposentadoria" %}selected{% endif %}>Aposentadoria</option>
+              <option value="isento" {% if r.tipo == "isento" %}selected{% endif %}>Isento</option>
+              <option value="exclusivo_fonte" {% if r.tipo == "exclusivo_fonte" %}selected{% endif %}>Exclusivo na Fonte</option>
+              <option value="outros_tributaveis" {% if r.tipo == "outros_tributaveis" %}selected{% endif %}>Outros</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Valor bruto (R$)</label>
+            <input type="number" step="0.01" name="rend_{{ forloop.index0 }}_bruto" value="{{ r.valor_bruto }}"
+              class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">IR retido (R$)</label>
+            <input type="number" step="0.01" name="rend_{{ forloop.index0 }}_ir" value="{{ r.ir_retido|default:'0' }}"
+              class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# ── Dependentes ── #}
+    {% if dados.dependentes %}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm mb-5 overflow-hidden">
+      <div class="px-5 py-3 border-b border-gray-100 bg-gray-50">
+        <h2 class="font-semibold text-gray-800 text-sm">Dependentes</h2>
+      </div>
+      {% for d in dados.dependentes %}
+      <div class="px-5 py-4 border-b border-gray-50 last:border-0" x-data="{ modo: 'confirmar' }">
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <p class="font-medium text-gray-800 text-sm">{{ d.nome }}</p>
+            <p class="text-xs text-gray-500">{{ d.parentesco }} · CPF: {{ d.cpf }}</p>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" @click="modo = 'confirmar'"
+              :class="modo === 'confirmar' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-white text-gray-500 border-gray-200'"
+              class="text-xs border px-3 py-1.5 rounded-lg transition font-medium">Confirmar</button>
+            <button type="button" @click="modo = 'descartar'"
+              :class="modo === 'descartar' ? 'bg-red-100 text-red-600 border-red-200' : 'bg-white text-gray-500 border-gray-200'"
+              class="text-xs border px-3 py-1.5 rounded-lg transition font-medium">Descartar</button>
+          </div>
+        </div>
+        <input type="hidden" name="dep_{{ forloop.index0 }}" :value="modo === 'descartar' ? 'descartar' : 'confirmar'">
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# ── Deduções ── #}
+    {% if dados.deducoes %}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm mb-5 overflow-hidden">
+      <div class="px-5 py-3 border-b border-gray-100 bg-gray-50">
+        <h2 class="font-semibold text-gray-800 text-sm">Deduções</h2>
+      </div>
+      {% for d in dados.deducoes %}
+      <div class="px-5 py-4 border-b border-gray-50 last:border-0" x-data="{ modo: 'confirmar' }">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1">
+            <p class="font-medium text-gray-800 text-sm">{{ d.descricao|default:d.tipo }}</p>
+            <p class="text-xs text-gray-500">{{ d.tipo }} · R$ {{ d.valor }}</p>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" @click="modo = 'confirmar'"
+              :class="modo === 'confirmar' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-white text-gray-500 border-gray-200'"
+              class="text-xs border px-3 py-1.5 rounded-lg transition font-medium">Confirmar</button>
+            <button type="button" @click="modo = 'editar'"
+              :class="modo === 'editar' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 'bg-white text-gray-500 border-gray-200'"
+              class="text-xs border px-3 py-1.5 rounded-lg transition font-medium">Editar</button>
+            <button type="button" @click="modo = 'descartar'"
+              :class="modo === 'descartar' ? 'bg-red-100 text-red-600 border-red-200' : 'bg-white text-gray-500 border-gray-200'"
+              class="text-xs border px-3 py-1.5 rounded-lg transition font-medium">Descartar</button>
+          </div>
+        </div>
+        <input type="hidden" name="ded_{{ forloop.index0 }}" :value="modo === 'descartar' ? 'descartar' : 'confirmar'">
+        <div x-show="modo === 'editar'" x-transition class="mt-3 grid grid-cols-2 gap-3 bg-yellow-50 rounded-xl p-4">
+          <div class="col-span-2">
+            <label class="block text-xs text-gray-500 mb-1">Descrição</label>
+            <input type="text" name="ded_{{ forloop.index0 }}_desc" value="{{ d.descricao }}"
+              class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Valor (R$)</label>
+            <input type="number" step="0.01" name="ded_{{ forloop.index0 }}_valor" value="{{ d.valor }}"
+              class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# ── Bens e Direitos ── #}
+    {% if dados.bens %}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm mb-5 overflow-hidden">
+      <div class="px-5 py-3 border-b border-gray-100 bg-gray-50">
+        <h2 class="font-semibold text-gray-800 text-sm">Bens e Direitos</h2>
+      </div>
+      {% for b in dados.bens %}
+      <div class="px-5 py-4 border-b border-gray-50 last:border-0" x-data="{ modo: 'confirmar' }">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1">
+            <p class="font-medium text-gray-800 text-sm">{{ b.discriminacao|truncatechars:70 }}</p>
+            <p class="text-xs text-gray-500">Código {{ b.codigo }} · Valor em {{ ano_anterior }}: R$ {{ b.valor_atual }}</p>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" @click="modo = 'confirmar'"
+              :class="modo === 'confirmar' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-white text-gray-500 border-gray-200'"
+              class="text-xs border px-3 py-1.5 rounded-lg transition font-medium">Confirmar</button>
+            <button type="button" @click="modo = 'editar'"
+              :class="modo === 'editar' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 'bg-white text-gray-500 border-gray-200'"
+              class="text-xs border px-3 py-1.5 rounded-lg transition font-medium">Editar valor</button>
+            <button type="button" @click="modo = 'descartar'"
+              :class="modo === 'descartar' ? 'bg-red-100 text-red-600 border-red-200' : 'bg-white text-gray-500 border-gray-200'"
+              class="text-xs border px-3 py-1.5 rounded-lg transition font-medium">Descartar</button>
+          </div>
+        </div>
+        <input type="hidden" name="bem_{{ forloop.index0 }}" :value="modo === 'descartar' ? 'descartar' : 'confirmar'">
+        <div x-show="modo === 'editar'" x-transition class="mt-3 grid grid-cols-2 gap-3 bg-yellow-50 rounded-xl p-4">
+          <div class="col-span-2">
+            <label class="block text-xs text-gray-500 mb-1">Discriminação</label>
+            <input type="text" name="bem_{{ forloop.index0 }}_disc" value="{{ b.discriminacao }}"
+              class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Valor em {{ declaracao.ano_base }} (R$)</label>
+            <input type="number" step="0.01" name="bem_{{ forloop.index0 }}_valor_atual" value="{{ b.valor_atual }}"
+              class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# Aviso de responsabilidade + botão #}
+    <div class="bg-yellow-50 border border-yellow-100 rounded-xl px-4 py-3 text-xs text-yellow-700 mb-5">
+      Ao confirmar, estes dados serão aplicados à sua declaração {{ declaracao.ano_base }}.
+      Você continua responsável pela exatidão das informações perante a Receita Federal.
+    </div>
+
+    <div class="flex justify-between">
+      <a href="{% url 'importacao_etapa0' declaracao.pk %}"
+         class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1">
+        ← Voltar
+      </a>
+      <button type="submit"
+        class="bg-brand text-white px-8 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+        Aplicar itens confirmados →
+      </button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

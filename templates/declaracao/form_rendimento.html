@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Adicionar Rendimento — Calculadora IR{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto mt-8">
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-6">Adicionar Rendimento</h2>
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+        <select name="tipo" required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+          <option value="">Selecione...</option>
+          <option value="salario">Salário / Pró-labore</option>
+          <option value="aluguel">Aluguéis</option>
+          <option value="autonomo">Trabalho Autônomo</option>
+          <option value="pensao_recebida">Pensão Alimentícia Recebida</option>
+          <option value="aposentadoria">Aposentadoria / Pensão INSS</option>
+          <option value="rural">Atividade Rural</option>
+          <option value="exterior">Rendimentos do Exterior</option>
+          <option value="outros_tributaveis">Outros Tributáveis</option>
+          <option value="isento">Isento / Não Tributável</option>
+          <option value="exclusivo_fonte">Tributado Exclusivamente na Fonte</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Fonte Pagadora</label>
+        <input type="text" name="fonte_pagadora_nome" required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+          placeholder="Nome da empresa ou pessoa">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">CNPJ / CPF da fonte</label>
+        <input type="text" name="fonte_pagadora_cnpj_cpf"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+          placeholder="Opcional">
+      </div>
+
+      <div class="grid grid-cols-3 gap-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Valor bruto (R$)</label>
+          <input type="number" name="valor_bruto" step="0.01" min="0" required
+            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+            placeholder="0,00">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">IR Retido (R$)</label>
+          <input type="number" name="ir_retido" step="0.01" min="0" value="0"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">INSS Retido (R$)</label>
+          <input type="number" name="inss_retido" step="0.01" min="0" value="0"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+        </div>
+      </div>
+
+      {% if erro %}
+        <p class="text-red-600 text-sm">{{ erro }}</p>
+      {% endif %}
+
+      <div class="flex gap-3 pt-2">
+        <a href="{% url 'declaracao_detalhe' declaracao.pk %}"
+           class="flex-1 text-center border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50">
+          Cancelar
+        </a>
+        <button type="submit"
+          class="flex-1 bg-brand text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-blue-700 transition">
+          Salvar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

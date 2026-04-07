@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Declaração Pronta — Calculadora IR{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto mt-12 text-center">
+
+  <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
+    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+    </svg>
+  </div>
+
+  <h1 class="text-2xl font-bold text-gray-900 mb-2">Declaração {{ declaracao.ano_base }} pronta!</h1>
+  <p class="text-gray-500 mb-6">
+    Sua declaração foi revisada e está pronta. Confira o resultado abaixo antes de exportar.
+  </p>
+
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6 text-left space-y-3">
+    <div class="flex justify-between text-sm">
+      <span class="text-gray-500">Modelo usado</span>
+      <span class="font-semibold capitalize">{{ declaracao.get_modelo_display }}</span>
+    </div>
+    <div class="flex justify-between text-sm">
+      <span class="text-gray-500">IR Devido</span>
+      <span class="font-mono font-semibold">R$ {{ declaracao.ir_devido|floatformat:2 }}</span>
+    </div>
+    <div class="flex justify-between text-sm">
+      <span class="text-gray-500">IR Retido na Fonte</span>
+      <span class="font-mono font-semibold">R$ {{ declaracao.ir_retido|floatformat:2 }}</span>
+    </div>
+    <div class="flex justify-between text-base border-t border-gray-100 pt-3">
+      <span class="font-semibold
+        {% if declaracao.resultado >= 0 %}text-green-700{% else %}text-red-700{% endif %}">
+        {% if declaracao.resultado >= 0 %}Restituição{% else %}Imposto a pagar{% endif %}
+      </span>
+      <span class="font-bold font-mono text-lg
+        {% if declaracao.resultado >= 0 %}text-green-700{% else %}text-red-700{% endif %}">
+        R$ {{ declaracao.resultado|floatformat:2 }}
+      </span>
+    </div>
+  </div>
+
+  <div class="flex flex-col sm:flex-row gap-3 justify-center">
+    <a href="{% url 'declaracao_auditoria' declaracao.pk %}"
+       class="border border-yellow-300 text-yellow-700 bg-yellow-50 px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-yellow-100 transition">
+      Auditar declaração
+    </a>
+    <a href="{% url 'declaracao_exportar' declaracao.pk %}"
+       class="border border-gray-300 text-gray-700 px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
+      Exportar PDF / JSON
+    </a>
+    <a href="{% url 'assistente_chat' declaracao.pk %}"
+       class="border border-brand text-brand px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-blue-50 transition">
+      Assistente
+    </a>
+    <a href="{% url 'dashboard' %}"
+       class="bg-brand text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+      Dashboard
+    </a>
+  </div>
+
+  <p class="text-xs text-gray-400 mt-8">
+    Prazo de entrega: <strong>30 de abril de {{ declaracao.ano_base|add:"1" }}</strong>.
+    Entregue pelo programa IRPF da Receita Federal ou pelo app "Meu Imposto de Renda".
+  </p>
+
+</div>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends "declaracao/wizard/base_wizard.html" %}
+{% block wizard_content %}
+
+<div class="flex items-start justify-between mb-1">
+  <h2 class="text-xl font-bold text-gray-900">Deduções</h2>
+  <a href="{% url 'documentos_upload' declaracao.pk %}"
+     class="flex items-center gap-1.5 text-xs border border-brand text-brand px-3 py-1.5 rounded-lg hover:bg-blue-50 transition flex-shrink-0 ml-4">
+    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+    </svg>
+    Importar recibo / comprovante
+  </a>
+</div>
+<p class="text-gray-400 text-sm mb-2">
+  Declare despesas médicas, educação, previdência e outros para reduzir seu IR.
+</p>
+
+{% if tem_importacao and deducoes %}
+<div class="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-100 rounded-xl px-4 py-2.5 mb-5">
+  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+  </svg>
+  <span>Deduções importadas abaixo. Adicione novas despesas de {{ declaracao.ano_base }} ou remova as que não se aplicam.</span>
+</div>
+{% else %}
+<p class="text-xs text-blue-600 bg-blue-50 rounded-lg px-3 py-2 mb-6">
+  Somente aplicáveis ao modelo completo. Se não tiver deduções, clique em <strong>Próximo</strong>.
+</p>
+{% endif %}
+
+{% if deducoes %}
+<div class="mb-5 space-y-2">
+  {% for d in deducoes %}
+  <div class="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
+    <div>
+      <p class="text-sm font-medium text-gray-800">{{ d.get_tipo_display }}</p>
+      <p class="text-xs text-gray-400">{{ d.descricao|truncatechars:50 }}</p>
+    </div>
+    <div class="flex items-center gap-4">
+      <span class="text-sm font-semibold font-mono text-gray-800">R$ {{ d.valor|floatformat:2 }}</span>
+      <form method="post" action="{% url 'wizard_deducao_remover' declaracao.pk d.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="text-gray-300 hover:text-red-500 transition" title="Remover">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div x-data="{ aberto: false }">
+  <button type="button" @click="aberto = !aberto"
+    class="flex items-center gap-2 text-sm text-brand font-medium mb-4 hover:underline">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    Adicionar dedução
+  </button>
+
+  <div x-show="aberto" x-transition class="bg-blue-50 rounded-xl p-5 mb-5">
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <input type="hidden" name="acao" value="adicionar">
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
+          <select name="tipo" required
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+            <option value="">Selecione...</option>
+            <option value="saude">Saúde (sem limite)</option>
+            <option value="educacao">Educação (limite R$ 3.561,50/pessoa)</option>
+            <option value="inss">INSS</option>
+            <option value="pgbl">PGBL (até 12% da renda)</option>
+            <option value="pensao_paga">Pensão Alimentícia Paga (judicial)</option>
+            <option value="livro_caixa">Livro-Caixa (autônomo)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Valor (R$)</label>
+          <input type="number" name="valor" step="0.01" min="0" required
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand"
+            placeholder="0,00">
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-medium text-gray-600 mb-1">Descrição</label>
+          <input type="text" name="descricao" required
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand"
+            placeholder="Ex: Plano de saúde Unimed">
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-medium text-gray-600 mb-1">CPF / CNPJ do prestador</label>
+          <input type="text" name="cpf_cnpj_beneficiario"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand"
+            placeholder="Recomendado para evitar malha fina">
+        </div>
+      </div>
+
+      <button type="submit"
+        class="bg-brand text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
+        Adicionar
+      </button>
+    </form>
+  </div>
+</div>
+
+{% if erro %}<p class="text-red-600 text-sm mb-4">{{ erro }}</p>{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="acao" value="avancar">
+  <div class="flex justify-between pt-2 border-t border-gray-100 mt-4">
+    <a href="{% url 'wizard_passo3' declaracao.pk %}"
+       class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1">← Voltar</a>
+    <button type="submit"
+      class="bg-brand text-white px-8 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+      Próximo →
+    </button>
+  </div>
+</form>
+
+{% include "partials/video_ajuda.html" %}
+{% endblock %}

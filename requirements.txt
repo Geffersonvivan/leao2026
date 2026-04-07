@@ -1,0 +1,8 @@
+Django==6.0.3
+python-decouple==3.8
+anthropic==0.88.0
+Pillow==12.2.0
+django-extensions==4.1
+whitenoise==6.12.0
+pypdf==6.9.2
+reportlab==4.4.10

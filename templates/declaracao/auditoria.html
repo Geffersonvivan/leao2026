@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block title %}Auditoria — Declaração {{ declaracao.ano_base }}{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-2 text-sm text-gray-400 mb-6">
+  <a href="{% url 'dashboard' %}" class="hover:text-gray-600">Dashboard</a>
+  <span>/</span>
+  <a href="{% url 'declaracao_detalhe' declaracao.pk %}" class="hover:text-gray-600">Declaração {{ declaracao.ano_base }}</a>
+  <span>/</span>
+  <span class="text-gray-700 font-medium">Auditoria Preventiva</span>
+</div>
+
+{# ── Cabeçalho com placar ── #}
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+  <div class="flex items-start justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-gray-900 mb-1">Auditoria Preventiva</h1>
+      <p class="text-sm text-gray-400">
+        Verificamos sua declaração em {{ relatorio.total }} ponto(s) antes de você enviar.
+      </p>
+    </div>
+    {% if relatorio.tem_problemas_criticos %}
+    <div class="flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-xl text-sm font-semibold">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+      {{ relatorio.erros|length }} erro(s) crítico(s)
+    </div>
+    {% elif relatorio.avisos %}
+    <div class="flex items-center gap-2 bg-yellow-50 text-yellow-700 px-4 py-2 rounded-xl text-sm font-semibold">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+      {{ relatorio.avisos|length }} aviso(s)
+    </div>
+    {% else %}
+    <div class="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-xl text-sm font-semibold">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+      </svg>
+      Nenhum problema crítico
+    </div>
+    {% endif %}
+  </div>
+
+  {# Resumo numérico #}
+  <div class="grid grid-cols-3 gap-3 mt-5">
+    <div class="text-center p-3 rounded-xl {% if relatorio.erros %}bg-red-50{% else %}bg-gray-50{% endif %}">
+      <p class="text-2xl font-bold {% if relatorio.erros %}text-red-600{% else %}text-gray-400{% endif %}">
+        {{ relatorio.erros|length }}
+      </p>
+      <p class="text-xs text-gray-500 mt-0.5">Erros críticos</p>
+    </div>
+    <div class="text-center p-3 rounded-xl {% if relatorio.avisos %}bg-yellow-50{% else %}bg-gray-50{% endif %}">
+      <p class="text-2xl font-bold {% if relatorio.avisos %}text-yellow-600{% else %}text-gray-400{% endif %}">
+        {{ relatorio.avisos|length }}
+      </p>
+      <p class="text-xs text-gray-500 mt-0.5">Avisos</p>
+    </div>
+    <div class="text-center p-3 rounded-xl {% if relatorio.dicas %}bg-blue-50{% else %}bg-gray-50{% endif %}">
+      <p class="text-2xl font-bold {% if relatorio.dicas %}text-blue-500{% else %}text-gray-400{% endif %}">
+        {{ relatorio.dicas|length }}
+      </p>
+      <p class="text-xs text-gray-500 mt-0.5">Dicas</p>
+    </div>
+  </div>
+</div>
+
+{# ── Resultado da simulação ── #}
+{% if relatorio.resultado %}
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
+  <h2 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4">Resultado calculado</h2>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+    <div>
+      <p class="text-xs text-gray-400 mb-0.5">Modelo recomendado</p>
+      <p class="font-semibold capitalize text-brand">{{ relatorio.simulacao.recomendado }}</p>
+    </div>
+    <div>
+      <p class="text-xs text-gray-400 mb-0.5">IR Devido</p>
+      <p class="font-semibold font-mono">R$ {{ relatorio.resultado.ir_devido|floatformat:2 }}</p>
+    </div>
+    <div>
+      <p class="text-xs text-gray-400 mb-0.5">IR Retido</p>
+      <p class="font-semibold font-mono">R$ {{ relatorio.resultado.ir_retido|floatformat:2 }}</p>
+    </div>
+    <div>
+      <p class="text-xs text-gray-400 mb-0.5">
+        {% if relatorio.resultado.resultado >= 0 %}Restituição{% else %}A pagar{% endif %}
+      </p>
+      <p class="font-bold font-mono text-base
+        {% if relatorio.resultado.resultado >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+        R$ {{ relatorio.resultado.resultado|floatformat:2 }}
+      </p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# ── Lista de alertas ── #}
+{% if relatorio.alertas %}
+<div class="space-y-3 mb-6">
+
+  {% for alerta in relatorio.erros %}
+  <div class="bg-red-50 border border-red-200 rounded-2xl p-4 flex gap-3">
+    <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+      <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </div>
+    <div>
+      <p class="font-semibold text-red-800 text-sm">{{ alerta.titulo }}</p>
+      <p class="text-red-700 text-sm mt-0.5">{{ alerta.detalhe }}</p>
+      <span class="inline-block mt-1.5 text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">{{ alerta.campo }}</span>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% for alerta in relatorio.avisos %}
+  <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex gap-3">
+    <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+      <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+    </div>
+    <div>
+      <p class="font-semibold text-yellow-800 text-sm">{{ alerta.titulo }}</p>
+      <p class="text-yellow-700 text-sm mt-0.5">{{ alerta.detalhe }}</p>
+      <span class="inline-block mt-1.5 text-xs bg-yellow-100 text-yellow-600 px-2 py-0.5 rounded-full">{{ alerta.campo }}</span>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% for alerta in relatorio.dicas %}
+  <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex gap-3">
+    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+      <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+    </div>
+    <div>
+      <p class="font-semibold text-blue-800 text-sm">{{ alerta.titulo }}</p>
+      <p class="text-blue-700 text-sm mt-0.5">{{ alerta.detalhe }}</p>
+      <span class="inline-block mt-1.5 text-xs bg-blue-100 text-blue-500 px-2 py-0.5 rounded-full">{{ alerta.campo }}</span>
+    </div>
+  </div>
+  {% endfor %}
+
+</div>
+{% else %}
+<div class="bg-green-50 border border-green-200 rounded-2xl p-6 text-center mb-6">
+  <svg class="w-10 h-10 text-green-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+  </svg>
+  <p class="font-semibold text-green-800">Nenhum problema identificado</p>
+  <p class="text-sm text-green-600 mt-1">Sua declaração passou em todas as verificações automáticas.</p>
+</div>
+{% endif %}
+
+{# ── Análise IA ── #}
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+  <div class="mb-4">
+    <h2 class="font-bold text-gray-900 mb-1">Análise Aprofundada com IA</h2>
+    <p class="text-sm text-gray-400">
+      O assistente lê sua declaração completa e entrega um parecer detalhado com riscos,
+      oportunidades e próximos passos.
+    </p>
+  </div>
+
+  {% if analise_ia %}
+  {{ analise_ia|json_script:"analise-ia-raw" }}
+  <div id="analise-ia-rendered" class="bg-gray-50 rounded-xl p-5 text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"></div>
+  <script>
+    (function() {
+      const raw = JSON.parse(document.getElementById('analise-ia-raw').textContent);
+      const el = document.getElementById('analise-ia-rendered');
+      // Converte markdown simples para HTML
+      el.innerHTML = raw
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/^#### (.+)$/gm, '<h4 class="font-bold text-gray-800 mt-4 mb-1">$1</h4>')
+        .replace(/^### (.+)$/gm, '<h3 class="font-bold text-gray-800 mt-5 mb-1">$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2 class="font-bold text-gray-900 mt-6 mb-2 text-base">$1</h2>')
+        .replace(/^# (.+)$/gm, '<h1 class="font-bold text-gray-900 mt-6 mb-2 text-lg">$1</h1>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/^---+$/gm, '<hr class="my-4 border-gray-200">')
+        .replace(/^\|\s*(.+?)\s*\|$/gm, function(line) {
+          const cells = line.split('|').filter((c,i,a) => i > 0 && i < a.length - 1);
+          if (cells.every(c => /^[-: ]+$/.test(c))) return '';
+          const tag = cells[0] && cells[0].trim().startsWith('-') ? 'td' : 'td';
+          return '<tr>' + cells.map(c => `<td class="border border-gray-200 px-3 py-1.5">${c.trim()}</td>`).join('') + '</tr>';
+        })
+        .replace(/(<tr>.*<\/tr>)/gs, '<table class="w-full text-xs border-collapse my-3">$1</table>')
+        .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
+        .replace(/(<li.*<\/li>\n?)+/gs, '<ul class="my-2 space-y-0.5">$&</ul>')
+        .replace(/\n\n+/g, '</p><p class="mb-2">')
+        .replace(/\n/g, '<br>');
+    })();
+  </script>
+  {% else %}
+  <form method="post" x-data="{ carregando: false }" @submit="carregando = true">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="analisar_ia">
+    <button type="submit" :disabled="carregando"
+      class="flex items-center gap-2 bg-brand text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-70 disabled:cursor-not-allowed">
+      <svg x-show="!carregando" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+      </svg>
+      <svg x-show="carregando" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+      </svg>
+      <span x-text="carregando ? 'Analisando sua declaração…' : 'Gerar análise com IA'"></span>
+    </button>
+  </form>
+  {% endif %}
+</div>
+
+{# ── Ações ── #}
+<div class="flex items-center justify-between">
+  <a href="{% url 'declaracao_detalhe' declaracao.pk %}"
+     class="text-sm text-gray-500 hover:text-gray-700">← Voltar à declaração</a>
+  <div class="flex gap-3">
+    <button onclick="window.abrirAssistente && window.abrirAssistente()"
+       class="border border-brand text-brand px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-blue-50">
+      Perguntar ao assistente
+    </button>
+    <a href="{% url 'wizard_passo6' declaracao.pk %}"
+       class="bg-green-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-green-700 transition">
+      Ir para revisão final →
+    </a>
+  </div>
+</div>
+
+{% include "partials/_chat_bubble.html" with declaracao=declaracao passo_titulo="Auditoria" analise_ia=analise_ia %}
+{% endblock %}

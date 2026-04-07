@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Pagamento cancelado — Leão 2026{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center px-4">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 max-w-md w-full">
+    <div class="text-5xl mb-4">😕</div>
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">Pagamento cancelado</h1>
+    <p class="text-gray-500 text-sm mb-8">
+      Nenhuma cobrança foi realizada. Você pode tentar novamente quando quiser.
+    </p>
+    <div class="flex gap-3 justify-center">
+      <a href="{% url 'planos' %}"
+         class="bg-brand text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+        Ver planos
+      </a>
+      <a href="{% url 'dashboard' %}"
+         class="border border-gray-300 text-gray-600 px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
+        Ir ao dashboard
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

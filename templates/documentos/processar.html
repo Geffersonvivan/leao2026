@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+{% block title %}Revisão da Extração — Calculadora IR{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-2 text-sm text-gray-400 mb-6">
+  <a href="{% url 'documentos_upload' declaracao.pk %}?tipo={{ documento.tipo }}" class="hover:text-gray-600">Documentos</a>
+  <span>/</span>
+  <span class="text-gray-700 font-medium">Revisar extração</span>
+</div>
+
+<div class="max-w-2xl mx-auto">
+
+  {% if documento.status_processamento == 'processando' %}
+  {# Ainda processando — auto-reload #}
+  <meta http-equiv="refresh" content="3">
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
+    <div class="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+    <p class="font-semibold text-gray-700 mb-1">Extraindo dados do documento...</p>
+    <p class="text-sm text-gray-400">A IA está lendo o arquivo. Isso leva alguns segundos.</p>
+  </div>
+
+  {% elif documento.dados_extraidos.erro %}
+  {# Erro na extração #}
+  <div class="bg-white rounded-2xl border border-red-100 shadow-sm p-8">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
+        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+      </div>
+      <div>
+        <p class="font-semibold text-gray-800">Não foi possível extrair os dados</p>
+        <p class="text-sm text-red-600">{{ documento.dados_extraidos.erro }}</p>
+      </div>
+    </div>
+    <p class="text-sm text-gray-500 mb-5">
+      O arquivo pode ser um PDF escaneado ou digitalizado. Tente reprocessar — a IA tentará ler as imagens do documento.
+    </p>
+    <div class="flex gap-3 flex-wrap">
+      <a href="{% url 'documentos_processar' declaracao.pk documento.pk %}"
+         class="bg-brand text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700">
+        Reprocessar documento
+      </a>
+      <a href="{% url 'documentos_upload' declaracao.pk %}?tipo={{ documento.tipo }}"
+         class="border border-gray-300 text-gray-700 px-5 py-2 rounded-xl text-sm font-medium hover:bg-gray-50">
+        Tentar outro arquivo
+      </a>
+      {% if documento.tipo == 'outros' %}
+      <a href="{% url 'wizard_passo5' declaracao.pk %}"
+         class="bg-brand text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700">
+        Ir para Bens e Direitos
+      </a>
+      {% else %}
+      <a href="{% url 'wizard_passo2' declaracao.pk %}"
+         class="bg-brand text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700">
+        Preencher manualmente
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% else %}
+  {# Sucesso — exibe os dados extraídos para revisão #}
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
+
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center">
+        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <div>
+        <p class="font-semibold text-gray-800">Dados extraídos com sucesso</p>
+        <p class="text-sm text-gray-400">Revise os dados abaixo antes de adicionar à declaração</p>
+      </div>
+    </div>
+
+    {% with d=documento.dados_extraidos %}
+
+    {% if d.tipo_documento == 'informe_rendimentos' %}
+    <div class="space-y-3">
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400 mb-0.5">Fonte Pagadora</p>
+          <p class="font-medium">{{ d.fonte_pagadora_nome|default:"—" }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400 mb-0.5">CNPJ</p>
+          <p class="font-medium">{{ d.fonte_pagadora_cnpj|default:"—" }}</p>
+        </div>
+      </div>
+      <p class="text-sm font-semibold text-gray-700 mt-3">Rendimentos identificados:</p>
+      <div class="space-y-2">
+        {% for r in d.rendimentos %}
+        <div class="bg-gray-50 rounded-xl px-4 py-3 text-sm">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="font-medium text-gray-800 capitalize">{{ r.tipo|default:"rendimento" }}</p>
+              <p class="text-xs text-gray-400">{{ r.descricao|default:"" }}</p>
+            </div>
+            <div class="text-right">
+              <p class="font-semibold font-mono">R$ {{ r.valor_bruto|floatformat:2 }}</p>
+              {% if r.ir_retido %}<p class="text-xs text-gray-400">IR: R$ {{ r.ir_retido|floatformat:2 }}</p>{% endif %}
+              {% if r.inss_retido %}<p class="text-xs text-gray-400">INSS: R$ {{ r.inss_retido|floatformat:2 }}</p>{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% elif d.tipo_documento == 'recibo_medico' %}
+    <div class="grid grid-cols-2 gap-3 text-sm">
+      <div class="bg-gray-50 rounded-lg p-3">
+        <p class="text-xs text-gray-400 mb-0.5">Prestador</p>
+        <p class="font-medium">{{ d.prestador_nome|default:"—" }}</p>
+      </div>
+      <div class="bg-gray-50 rounded-lg p-3">
+        <p class="text-xs text-gray-400 mb-0.5">CPF/CNPJ</p>
+        <p class="font-medium">{{ d.prestador_cnpj_cpf|default:"—" }}</p>
+      </div>
+      <div class="bg-gray-50 rounded-lg p-3">
+        <p class="text-xs text-gray-400 mb-0.5">Descrição</p>
+        <p class="font-medium">{{ d.descricao|default:"—" }}</p>
+      </div>
+      <div class="bg-gray-50 rounded-lg p-3">
+        <p class="text-xs text-gray-400 mb-0.5">Valor</p>
+        <p class="font-semibold font-mono">R$ {{ d.valor|floatformat:2 }}</p>
+      </div>
+    </div>
+
+    {% elif d.tipo_documento == 'boleto_escola' %}
+    <div class="grid grid-cols-2 gap-3 text-sm">
+      <div class="bg-gray-50 rounded-lg p-3">
+        <p class="text-xs text-gray-400 mb-0.5">Instituição</p>
+        <p class="font-medium">{{ d.instituicao_nome|default:"—" }}</p>
+      </div>
+      <div class="bg-gray-50 rounded-lg p-3">
+        <p class="text-xs text-gray-400 mb-0.5">CNPJ</p>
+        <p class="font-medium">{{ d.instituicao_cnpj|default:"—" }}</p>
+      </div>
+      <div class="bg-gray-50 rounded-lg p-3">
+        <p class="text-xs text-gray-400 mb-0.5">Aluno</p>
+        <p class="font-medium">{{ d.aluno_nome|default:"—" }}</p>
+      </div>
+      <div class="bg-gray-50 rounded-lg p-3">
+        <p class="text-xs text-gray-400 mb-0.5">Valor total</p>
+        <p class="font-semibold font-mono">R$ {{ d.valor_total|floatformat:2 }}</p>
+      </div>
+    </div>
+
+    {% elif d.tipo_documento == 'outros' %}
+
+      {% if d.subtipo == 'veiculo' %}
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div class="bg-gray-50 rounded-lg p-3 col-span-2">
+          <p class="text-xs text-gray-400 mb-0.5">Veículo</p>
+          <p class="font-medium">{{ d.marca_modelo|default:"—" }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400 mb-0.5">Ano de fabricação</p>
+          <p class="font-medium">{{ d.ano_fabricacao|default:"—" }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400 mb-0.5">Placa / RENAVAM</p>
+          <p class="font-medium">{{ d.placa|default:"—" }} / {{ d.renavam|default:"—" }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400 mb-0.5">Valor de aquisição</p>
+          <p class="font-semibold font-mono">R$ {{ d.valor_aquisicao|floatformat:2 }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400 mb-0.5">Data de aquisição</p>
+          <p class="font-medium">{{ d.data_aquisicao|default:"—" }}</p>
+        </div>
+        <div class="bg-blue-50 rounded-lg p-3 col-span-2">
+          <p class="text-xs text-blue-600 mb-0.5">Discriminação para a declaração (Código RF: {{ d.codigo_rf|default:"21" }})</p>
+          <p class="font-medium text-blue-800">{{ d.discriminacao|default:"—" }}</p>
+        </div>
+      </div>
+
+      {% elif d.subtipo == 'imovel' %}
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div class="bg-gray-50 rounded-lg p-3 col-span-2">
+          <p class="text-xs text-gray-400 mb-0.5">Endereço</p>
+          <p class="font-medium">{{ d.endereco|default:"—" }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400 mb-0.5">Área (m²)</p>
+          <p class="font-medium">{{ d.area_m2|default:"—" }} m²</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400 mb-0.5">Matrícula / Cartório</p>
+          <p class="font-medium">{{ d.matricula|default:"—" }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400 mb-0.5">Valor de aquisição</p>
+          <p class="font-semibold font-mono">R$ {{ d.valor_aquisicao|floatformat:2 }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400 mb-0.5">Data de aquisição</p>
+          <p class="font-medium">{{ d.data_aquisicao|default:"—" }}</p>
+        </div>
+        <div class="bg-blue-50 rounded-lg p-3 col-span-2">
+          <p class="text-xs text-blue-600 mb-0.5">Discriminação para a declaração (Código RF: {{ d.codigo_rf|default:"11" }})</p>
+          <p class="font-medium text-blue-800">{{ d.discriminacao|default:"—" }}</p>
+        </div>
+      </div>
+
+      {% elif d.subtipo == 'acoes_fii' %}
+      <div class="space-y-3 text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-gray-50 rounded-lg p-3">
+            <p class="text-xs text-gray-400 mb-0.5">Corretora</p>
+            <p class="font-medium">{{ d.corretora_nome|default:"—" }}</p>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3">
+            <p class="text-xs text-gray-400 mb-0.5">CNPJ</p>
+            <p class="font-medium">{{ d.corretora_cnpj|default:"—" }}</p>
+          </div>
+        </div>
+        <p class="text-xs font-semibold text-gray-600 mt-1">Ativos identificados:</p>
+        {% for ativo in d.ativos %}
+        <div class="bg-gray-50 rounded-xl px-4 py-3 flex justify-between items-center">
+          <div>
+            <p class="font-semibold text-gray-800">{{ ativo.ticker|default:"—" }}</p>
+            <p class="text-xs text-gray-400">{{ ativo.nome|default:"" }} · {{ ativo.quantidade }} cotas</p>
+          </div>
+          <p class="font-semibold font-mono">R$ {{ ativo.valor_total|floatformat:2 }}</p>
+        </div>
+        {% endfor %}
+        <div class="bg-blue-50 rounded-lg p-3">
+          <p class="text-xs text-blue-600 mb-0.5">Discriminação para a declaração (Código RF: {{ d.codigo_rf|default:"31" }})</p>
+          <p class="font-medium text-blue-800">{{ d.discriminacao|default:"—" }}</p>
+        </div>
+      </div>
+
+      {% elif d.subtipo == 'cripto' %}
+      <div class="space-y-3 text-sm">
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400 mb-0.5">Exchange</p>
+          <p class="font-medium">{{ d.exchange|default:"—" }}</p>
+        </div>
+        <p class="text-xs font-semibold text-gray-600 mt-1">Ativos identificados:</p>
+        {% for ativo in d.ativos %}
+        <div class="bg-gray-50 rounded-xl px-4 py-3 flex justify-between items-center">
+          <div>
+            <p class="font-semibold text-gray-800">{{ ativo.simbolo|default:"—" }}</p>
+            <p class="text-xs text-gray-400">{{ ativo.nome|default:"" }} · {{ ativo.quantidade }} unid.</p>
+          </div>
+          <p class="font-semibold font-mono">R$ {{ ativo.valor_brl|floatformat:2 }}</p>
+        </div>
+        {% endfor %}
+        <div class="bg-blue-50 rounded-lg p-3">
+          <p class="text-xs text-blue-600 mb-0.5">Discriminação para a declaração (Código RF: {{ d.codigo_rf|default:"89" }})</p>
+          <p class="font-medium text-blue-800">{{ d.discriminacao|default:"—" }}</p>
+        </div>
+      </div>
+
+      {% elif d.subtipo == 'conta_bancaria' %}
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div class="bg-gray-50 rounded-lg p-3 col-span-2">
+          <p class="text-xs text-gray-400 mb-0.5">Banco</p>
+          <p class="font-medium">{{ d.banco_nome|default:"—" }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400 mb-0.5">Agência / Conta</p>
+          <p class="font-medium">{{ d.agencia|default:"—" }} / {{ d.conta|default:"—" }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400 mb-0.5">Saldo</p>
+          <p class="font-semibold font-mono">R$ {{ d.saldo|floatformat:2 }}</p>
+        </div>
+        <div class="bg-blue-50 rounded-lg p-3 col-span-2">
+          <p class="text-xs text-blue-600 mb-0.5">Discriminação para a declaração (Código RF: {{ d.codigo_rf|default:"41" }})</p>
+          <p class="font-medium text-blue-800">{{ d.discriminacao|default:"—" }}</p>
+        </div>
+      </div>
+
+      {% else %}
+      {# genérico #}
+      <div class="bg-gray-50 rounded-xl p-4">
+        <p class="text-xs text-gray-400 mb-1">Descrição</p>
+        <p class="text-sm text-gray-700">{{ d.descricao|default:"Documento sem descrição" }}</p>
+      </div>
+      {% endif %}
+
+    {% else %}
+    <pre class="text-xs bg-gray-50 rounded-xl p-4 overflow-auto text-gray-600">{{ documento.dados_extraidos }}</pre>
+    {% endif %}
+
+    {% endwith %}
+  </div>
+
+  {% with d=documento.dados_extraidos %}
+  {% if d.tipo_documento == 'outros' or documento.tipo == 'outros' %}
+  <div class="bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-5 text-sm text-green-800 flex items-start gap-2">
+    <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+    </svg>
+    <div>
+      <p class="font-semibold mb-0.5">Dados prontos para serem inseridos</p>
+      <p>Clique em <strong>Adicionar à declaração</strong> e os bens serão criados automaticamente no <strong>Passo 5</strong>. Você poderá revisar e ajustar os valores lá.</p>
+    </div>
+  </div>
+  {% else %}
+  <div class="bg-yellow-50 border border-yellow-100 rounded-xl px-4 py-3 mb-5 text-sm text-yellow-800">
+    Verifique se os dados estão corretos. Após confirmar, eles serão adicionados à sua declaração automaticamente.
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <form method="post" class="flex justify-between">
+    {% csrf_token %}
+    <button type="submit" name="acao" value="descartar"
+      class="border border-gray-300 text-gray-600 px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50">
+      Descartar
+    </button>
+    {% with d=documento.dados_extraidos %}
+    {% if d.tipo_documento == 'outros' or documento.tipo == 'outros' %}
+    <button type="submit" name="acao" value="confirmar"
+      class="bg-brand text-white px-8 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+      Adicionar à declaração e ir para Bens →
+    </button>
+    {% else %}
+    <button type="submit" name="acao" value="confirmar"
+      class="bg-brand text-white px-8 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+      Confirmar e adicionar à declaração
+    </button>
+    {% endif %}
+    {% endwith %}
+  </form>
+
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Planos — Leão 2026{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-10 px-4">
+
+  <div class="text-center mb-10">
+    <img src="{% static 'img/leao2026.png' %}" alt="Leão 2026" class="h-14 w-auto mx-auto mb-4 object-contain">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Escolha seu plano</h1>
+    <p class="text-gray-500">Pagamento seguro via Stripe. Sem assinatura recorrente.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    {% if plano_pessoal %}
+    <div class="relative bg-white rounded-2xl border shadow-sm flex flex-col
+      {% if plano_pessoal.destaque %}border-brand ring-2 ring-brand{% else %}border-gray-200{% endif %}">
+
+      {% if plano_pessoal.destaque %}
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+        <span class="bg-brand text-white text-xs font-semibold px-3 py-1 rounded-full">Mais popular</span>
+      </div>
+      {% endif %}
+
+      <div class="p-6 flex-1">
+        <h2 class="text-lg font-bold text-gray-900 mb-1">{{ plano_pessoal.nome }}</h2>
+        {% if plano_pessoal.descricao_curta %}
+        <p class="text-sm text-gray-500 mb-4">{{ plano_pessoal.descricao_curta }}</p>
+        {% endif %}
+
+        <div class="mb-6">
+          <span class="text-3xl font-bold text-gray-900">R$ {{ plano_pessoal.preco_anual|floatformat:2 }}</span>
+          <span class="text-gray-400 text-sm">/ano</span>
+        </div>
+
+        <ul class="space-y-2 text-sm text-gray-600">
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            1 declaração por ano
+          </li>
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Importar documentos com IA
+          </li>
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Assistente IA ilimitado
+          </li>
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Ganho de capital (ações, imóveis)
+          </li>
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Rendimentos do exterior
+          </li>
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Exportação em PDF e JSON
+          </li>
+        </ul>
+      </div>
+
+      <div class="p-6 pt-0">
+        {% if assinatura and assinatura.plano == plano_pessoal and assinatura.ativa %}
+        <div class="w-full text-center py-2.5 rounded-xl text-sm font-semibold bg-green-50 text-green-700 border border-green-200">
+          ✓ Plano atual
+        </div>
+        {% elif user.is_authenticated %}
+        <a href="{% url 'assinatura_checkout' plano_pessoal.slug %}"
+           class="block w-full text-center py-2.5 rounded-xl text-sm font-semibold transition
+           {% if plano_pessoal.destaque %}bg-brand text-white hover:bg-blue-700{% else %}border border-brand text-brand hover:bg-blue-50{% endif %}">
+          Assinar agora
+        </a>
+        {% else %}
+        <a href="{% url 'registro' %}?next={% url 'assinatura_checkout' plano_pessoal.slug %}"
+           class="block w-full text-center py-2.5 rounded-xl text-sm font-semibold transition
+           {% if plano_pessoal.destaque %}bg-brand text-white hover:bg-blue-700{% else %}border border-brand text-brand hover:bg-blue-50{% endif %}">
+          Criar conta e assinar
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if plano_tokens %}
+    <div x-data="{ quantidade: {{ plano_tokens.min_tokens }}, minQtd: {{ plano_tokens.min_tokens }}, preco: {{ plano_tokens.preco_token_em_centavos }} / 100 }"
+         class="relative bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col">
+
+      <div class="p-6 flex-1">
+        <h2 class="text-lg font-bold text-gray-900 mb-1">{{ plano_tokens.nome }}</h2>
+        {% if plano_tokens.descricao_curta %}
+        <p class="text-sm text-gray-500 mb-4">{{ plano_tokens.descricao_curta }}</p>
+        {% endif %}
+
+        <div class="mb-2">
+          <span class="text-3xl font-bold text-gray-900">R$ {{ plano_tokens.preco_por_token|floatformat:2 }}</span>
+          <span class="text-gray-400 text-sm">/declaração</span>
+        </div>
+
+        <div class="bg-gray-50 rounded-xl p-4 mb-5">
+          <p class="text-xs text-gray-500 mb-2">Quantidade de declarações (mín. {{ plano_tokens.min_tokens }})</p>
+          <div class="flex items-center gap-3">
+            <button type="button"
+                    @click="if (quantidade > minQtd) quantidade--"
+                    class="w-8 h-8 rounded-lg border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold text-lg leading-none">−</button>
+            <input type="number" x-model.number="quantidade"
+                   :min="minQtd"
+                   class="w-16 text-center font-semibold text-gray-900 border border-gray-300 rounded-lg py-1 text-sm"
+                   @change="if (quantidade < minQtd) quantidade = minQtd">
+            <button type="button"
+                    @click="quantidade++"
+                    class="w-8 h-8 rounded-lg border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold text-lg leading-none">+</button>
+          </div>
+          <p class="text-xs text-gray-400 mt-2">
+            Total: <span class="font-semibold text-gray-700" x-text="'R$ ' + (quantidade * preco).toFixed(2).replace('.', ',')"></span>
+          </p>
+        </div>
+
+        <ul class="space-y-2 text-sm text-gray-600">
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Declarações ilimitadas (por token)
+          </li>
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Importar documentos com IA
+          </li>
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Assistente IA ilimitado
+          </li>
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Ganho de capital e exterior
+          </li>
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Tokens não expiram
+          </li>
+        </ul>
+
+        {% if saldo %}
+        <div class="mt-4 bg-blue-50 rounded-lg px-3 py-2 text-xs text-blue-700 font-medium">
+          Saldo atual: {{ saldo.tokens_disponiveis }} token{{ saldo.tokens_disponiveis|pluralize:",s" }} disponíve{{ saldo.tokens_disponiveis|pluralize:"l,is" }}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="p-6 pt-0">
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'assinatura_checkout' plano_tokens.slug %}">
+          {% csrf_token %}
+          <input type="hidden" name="quantidade" x-bind:value="quantidade">
+          <button type="submit"
+                  class="block w-full text-center py-2.5 rounded-xl text-sm font-semibold transition border border-brand text-brand hover:bg-blue-50">
+            Comprar tokens
+          </button>
+        </form>
+        {% else %}
+        <a href="{% url 'registro' %}?next={% url 'assinatura_checkout' plano_tokens.slug %}"
+           class="block w-full text-center py-2.5 rounded-xl text-sm font-semibold transition border border-brand text-brand hover:bg-blue-50">
+          Criar conta e comprar
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <p class="text-center text-xs text-gray-400 mt-8">
+    Pagamento seguro via Stripe. Dados protegidos com criptografia TLS.
+  </p>
+
+</div>
+{% endblock %}

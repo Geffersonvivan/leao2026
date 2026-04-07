@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+{% block title %}Preciso declarar o IR 2025? — Leão 2026{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-4"
+  x-data="{
+    etapa: 1,
+    resultado: null,
+    motivos_obrigacao: [],
+    criterios_abertos: false,
+
+    e1_renda_tributavel: false,
+    e1_renda_isenta: false,
+    e2_bolsa: false,
+    e2_ganho_capital: false,
+    e2_isencao_imovel: false,
+    e3_patrimonio: false,
+    e3_atualizacao_imovel: false,
+    e4_rural: false,
+    e4_exterior: false,
+
+    verificarEtapa(e) {
+      const m = [];
+      if (e === 1) {
+        if (this.e1_renda_tributavel) m.push('Rendimentos tributáveis acima de R\$ 33.888 no ano (salário, aposentadoria, pensão, aluguel, autônomo)');
+        if (this.e1_renda_isenta) m.push('Rendimentos isentos ou não tributáveis acima de R\$ 200.000 (FGTS, herança, doação, lucros de empresa)');
+      }
+      if (e === 2) {
+        if (this.e2_bolsa) m.push('Operações em bolsa com soma de vendas acima de R\$ 40.000 ou com lucro tributável');
+        if (this.e2_ganho_capital) m.push('Venda de bem (imóvel, veículo, terreno) com ganho de capital');
+        if (this.e2_isencao_imovel) m.push('Venda de imóvel residencial com compra de outro em até 180 dias (isenção de ganho de capital)');
+      }
+      if (e === 3) {
+        if (this.e3_patrimonio) m.push('Bens e direitos acima de R\$ 800.000 em 31/12/2024 (imóveis, veículos, investimentos, etc.)');
+        if (this.e3_atualizacao_imovel) m.push('Atualização de imóvel com taxa diferenciada autorizada pela Receita Federal em 2024');
+      }
+      if (e === 4) {
+        if (this.e4_rural) m.push('Receita bruta de atividade rural acima de R\$ 169.440 no ano');
+        if (this.e4_exterior) m.push('Lucros ou dividendos de ativos no exterior (offshores, trusts, contas internacionais)');
+      }
+      return m;
+    },
+
+    avancar() {
+      const motivos = this.verificarEtapa(this.etapa);
+      if (motivos.length > 0) {
+        this.motivos_obrigacao = motivos;
+        this.resultado = 'obrigado';
+        return;
+      }
+      if (this.etapa < 4) {
+        this.etapa++;
+      } else {
+        this.resultado = 'nao_obrigado';
+      }
+    },
+
+    reiniciar() {
+      this.etapa = 1;
+      this.resultado = null;
+      this.motivos_obrigacao = [];
+      this.e1_renda_tributavel = false;
+      this.e1_renda_isenta = false;
+      this.e2_bolsa = false;
+      this.e2_ganho_capital = false;
+      this.e2_isencao_imovel = false;
+      this.e3_patrimonio = false;
+      this.e3_atualizacao_imovel = false;
+      this.e4_rural = false;
+      this.e4_exterior = false;
+    }
+  }">
+
+  {# Cabeçalho #}
+  <div class="text-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Preciso declarar o IR 2025?</h1>
+    <p class="text-gray-500 text-sm max-w-md mx-auto">
+      Responda 4 perguntas rápidas e descubra se você é obrigado a declarar, com base nas regras da Receita Federal.
+    </p>
+  </div>
+
+  {# ── Accordion: critérios completos ──────────────────────────────────── #}
+  <div class="mb-5 border border-gray-200 rounded-2xl overflow-hidden bg-white"
+    x-data="{ aberto: false }">
+    <button @click="aberto = !aberto"
+      class="w-full flex items-center justify-between px-5 py-4 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
+      <span class="flex items-center gap-2">
+        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Ver todos os critérios da Receita Federal (DIRPF 2025)
+      </span>
+      <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="aberto && 'rotate-180'"
+        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </button>
+    <div x-show="aberto" x-transition class="border-t border-gray-100 px-5 py-4 space-y-3">
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+        É obrigado a declarar o IRPF 2025 (ano-base 2024) quem:
+      </p>
+      {% for criterio in criterios %}
+      <div class="flex items-start gap-3">
+        <span class="mt-1 flex-shrink-0 w-5 h-5 rounded-full bg-blue-50 text-brand text-xs font-bold flex items-center justify-center">
+          {{ forloop.counter }}
+        </span>
+        <p class="text-sm text-gray-600">{{ criterio }}</p>
+      </div>
+      {% endfor %}
+      <div class="mt-3 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 text-xs text-amber-700">
+        <strong>Regra dos R$ 5.000/mês:</strong> A isenção para quem ganha até R$ 5.000/mês
+        <strong>só entra em vigor em 2026</strong> (ano-base 2025). Para esta declaração, o limite ainda é R$ 33.888/ano.
+      </div>
+    </div>
+  </div>
+
+  {# ── Quiz ────────────────────────────────────────────────────────────── #}
+  <div x-show="resultado === null">
+
+    {# Barra de progresso #}
+    <div class="flex items-center gap-1.5 mb-5">
+      <template x-for="i in [1,2,3,4]" :key="i">
+        <div class="flex-1 h-1.5 rounded-full transition-colors duration-300"
+          :class="i < etapa ? 'bg-brand' : i === etapa ? 'bg-brand-light' : 'bg-gray-200'">
+        </div>
+      </template>
+    </div>
+
+    {# ── Etapa 1 ── #}
+    <div x-show="etapa === 1" x-transition>
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs font-semibold text-brand uppercase tracking-wider">Etapa 1 de 4</span>
+        </div>
+        <h2 class="text-xl font-bold text-gray-900 mb-1">Renda do dia a dia</h2>
+        <p class="text-sm text-gray-400 mb-6">
+          No ano de 2024, você recebeu algum valor que se encaixe nessas situações?
+        </p>
+
+        <div class="space-y-3">
+          <label class="flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition"
+            :class="e1_renda_tributavel ? 'border-brand bg-blue-50' : 'border-gray-100 hover:border-gray-200'">
+            <input type="checkbox" x-model="e1_renda_tributavel" class="mt-0.5 accent-brand w-4 h-4 flex-shrink-0">
+            <div>
+              <p class="text-sm font-medium text-gray-800">
+                Meu salário, aposentadoria, pensão ou recebimentos de aluguel somaram mais de <strong>R$ 33.888</strong> no ano inteiro
+              </p>
+              <p class="text-xs text-gray-400 mt-1">Equivale a uma média de R$ 2.824/mês</p>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition"
+            :class="e1_renda_isenta ? 'border-brand bg-blue-50' : 'border-gray-100 hover:border-gray-200'">
+            <input type="checkbox" x-model="e1_renda_isenta" class="mt-0.5 accent-brand w-4 h-4 flex-shrink-0">
+            <div>
+              <p class="text-sm font-medium text-gray-800">
+                Recebi FGTS, indenização trabalhista, herança, doação ou lucro de empresa que somados deram mais de <strong>R$ 200.000</strong>
+              </p>
+              <p class="text-xs text-gray-400 mt-1">Rendimentos isentos, não tributáveis ou tributados exclusivamente na fonte</p>
+            </div>
+          </label>
+        </div>
+
+        <div class="flex justify-between items-center mt-6">
+          <p class="text-xs text-gray-400">Se não se aplica a nenhum, avance para a próxima</p>
+          <button @click="avancar()"
+            class="bg-brand text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+            Próximo →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {# ── Etapa 2 ── #}
+    <div x-show="etapa === 2" x-transition>
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs font-semibold text-brand uppercase tracking-wider">Etapa 2 de 4</span>
+        </div>
+        <h2 class="text-xl font-bold text-gray-900 mb-1">Investimentos e bolsa de valores</h2>
+        <p class="text-sm text-gray-400 mb-6">
+          Você investe na bolsa ou vendeu algum bem com lucro em 2024?
+        </p>
+
+        <div class="space-y-3">
+          <label class="flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition"
+            :class="e2_bolsa ? 'border-brand bg-blue-50' : 'border-gray-100 hover:border-gray-200'">
+            <input type="checkbox" x-model="e2_bolsa" class="mt-0.5 accent-brand w-4 h-4 flex-shrink-0">
+            <div>
+              <p class="text-sm font-medium text-gray-800">
+                Vendi ações, fundos imobiliários ou outros ativos na bolsa e a soma das vendas foi maior que <strong>R$ 40.000</strong>, ou tive lucro sujeito a imposto
+              </p>
+              <p class="text-xs text-gray-400 mt-1">Inclui day-trade, FIIs, ETFs e criptoativos</p>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition"
+            :class="e2_ganho_capital ? 'border-brand bg-blue-50' : 'border-gray-100 hover:border-gray-200'">
+            <input type="checkbox" x-model="e2_ganho_capital" class="mt-0.5 accent-brand w-4 h-4 flex-shrink-0">
+            <div>
+              <p class="text-sm font-medium text-gray-800">
+                Vendi algum bem (carro, casa, terreno) com lucro — ganho de capital
+              </p>
+              <p class="text-xs text-gray-400 mt-1">Qualquer valor de lucro, mesmo pequeno</p>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition"
+            :class="e2_isencao_imovel ? 'border-brand bg-blue-50' : 'border-gray-100 hover:border-gray-200'">
+            <input type="checkbox" x-model="e2_isencao_imovel" class="mt-0.5 accent-brand w-4 h-4 flex-shrink-0">
+            <div>
+              <p class="text-sm font-medium text-gray-800">
+                Vendi uma casa/apartamento e usei o dinheiro para comprar outro imóvel residencial dentro de <strong>180 dias</strong>, para não pagar imposto
+              </p>
+              <p class="text-xs text-gray-400 mt-1">Mesmo isenta, a operação deve ser declarada</p>
+            </div>
+          </label>
+        </div>
+
+        <div class="flex justify-between items-center mt-6">
+          <button @click="etapa = 1"
+            class="text-sm text-gray-400 hover:text-gray-600 transition">
+            ← Voltar
+          </button>
+          <button @click="avancar()"
+            class="bg-brand text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+            Próximo →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {# ── Etapa 3 ── #}
+    <div x-show="etapa === 3" x-transition>
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs font-semibold text-brand uppercase tracking-wider">Etapa 3 de 4</span>
+        </div>
+        <h2 class="text-xl font-bold text-gray-900 mb-1">Posse de bens</h2>
+        <p class="text-sm text-gray-400 mb-6">
+          Como estava o seu patrimônio no fim de 2024?
+        </p>
+
+        <div class="space-y-3">
+          <label class="flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition"
+            :class="e3_patrimonio ? 'border-brand bg-blue-50' : 'border-gray-100 hover:border-gray-200'">
+            <input type="checkbox" x-model="e3_patrimonio" class="mt-0.5 accent-brand w-4 h-4 flex-shrink-0">
+            <div>
+              <p class="text-sm font-medium text-gray-800">
+                Em 31 de dezembro de 2024, a soma de tudo o que eu tinha (imóveis, carros, saldo em contas, investimentos) era maior que <strong>R$ 800.000</strong>
+              </p>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition"
+            :class="e3_atualizacao_imovel ? 'border-brand bg-blue-50' : 'border-gray-100 hover:border-gray-200'">
+            <input type="checkbox" x-model="e3_atualizacao_imovel" class="mt-0.5 accent-brand w-4 h-4 flex-shrink-0">
+            <div>
+              <p class="text-sm font-medium text-gray-800">
+                Atualizei o valor dos meus imóveis na Receita Federal pagando a <strong>taxa diferenciada</strong> que o governo liberou no final de 2024
+              </p>
+              <p class="text-xs text-gray-400 mt-1">Conforme Lei 14.973/2024</p>
+            </div>
+          </label>
+        </div>
+
+        <div class="flex justify-between items-center mt-6">
+          <button @click="etapa = 2"
+            class="text-sm text-gray-400 hover:text-gray-600 transition">
+            ← Voltar
+          </button>
+          <button @click="avancar()"
+            class="bg-brand text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+            Próximo →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {# ── Etapa 4 ── #}
+    <div x-show="etapa === 4" x-transition>
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs font-semibold text-brand uppercase tracking-wider">Etapa 4 de 4</span>
+        </div>
+        <h2 class="text-xl font-bold text-gray-900 mb-1">Casos específicos</h2>
+        <p class="text-sm text-gray-400 mb-6">
+          Alguma destas situações especiais aconteceu com você em 2024?
+        </p>
+
+        <div class="space-y-3">
+          <label class="flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition"
+            :class="e4_rural ? 'border-brand bg-blue-50' : 'border-gray-100 hover:border-gray-200'">
+            <input type="checkbox" x-model="e4_rural" class="mt-0.5 accent-brand w-4 h-4 flex-shrink-0">
+            <div>
+              <p class="text-sm font-medium text-gray-800">
+                Tive receita bruta em atividade rural maior que <strong>R$ 169.440</strong>
+              </p>
+              <p class="text-xs text-gray-400 mt-1">Agricultura, pecuária, pesca, silvicultura, extração vegetal</p>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition"
+            :class="e4_exterior ? 'border-brand bg-blue-50' : 'border-gray-100 hover:border-gray-200'">
+            <input type="checkbox" x-model="e4_exterior" class="mt-0.5 accent-brand w-4 h-4 flex-shrink-0">
+            <div>
+              <p class="text-sm font-medium text-gray-800">
+                Tenho dinheiro aplicado no exterior rendendo lucros ou dividendos em empresas controladas
+              </p>
+              <p class="text-xs text-gray-400 mt-1">Offshores, trusts, contas e investimentos internacionais</p>
+            </div>
+          </label>
+        </div>
+
+        <div class="flex justify-between items-center mt-6">
+          <button @click="etapa = 3"
+            class="text-sm text-gray-400 hover:text-gray-600 transition">
+            ← Voltar
+          </button>
+          <button @click="avancar()"
+            class="bg-brand text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+            Ver resultado →
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  {# ── Resultados ───────────────────────────────────────────────────────── #}
+
+  {# OBRIGADO #}
+  <div x-show="resultado === 'obrigado'" x-transition>
+    <div class="bg-red-50 border border-red-200 rounded-2xl p-6 md:p-8">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-red-800">Você é obrigado a declarar o IRPF 2025</h2>
+          <p class="text-sm text-red-600 mt-0.5">Prazo: até <strong>30 de maio de 2025</strong></p>
+        </div>
+      </div>
+
+      <div class="bg-white bg-opacity-60 rounded-xl p-4 mb-5">
+        <p class="text-sm font-semibold text-red-700 mb-2">Por quê você é obrigado:</p>
+        <ul class="space-y-2">
+          <template x-for="motivo in motivos_obrigacao" :key="motivo">
+            <li class="flex items-start gap-2 text-sm text-red-700">
+              <svg class="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+              <span x-text="motivo"></span>
+            </li>
+          </template>
+        </ul>
+      </div>
+
+      <p class="text-sm text-red-700 mb-5">
+        Mas não se preocupe — a gente te ajuda a declarar com segurança, passo a passo.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        {% if user.is_authenticated %}
+        <a href="{% url 'declaracao_nova' %}"
+           class="flex-1 text-center bg-brand text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+          Começar minha declaração agora →
+        </a>
+        {% else %}
+        <a href="{% url 'registro' %}"
+           class="flex-1 text-center bg-brand text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+          Criar conta e declarar agora →
+        </a>
+        <a href="{% url 'login' %}"
+           class="flex-shrink-0 text-center border border-red-200 text-red-700 px-6 py-3 rounded-xl text-sm font-semibold hover:bg-red-100 transition">
+          Já tenho conta
+        </a>
+        {% endif %}
+      </div>
+      <button @click="reiniciar()" class="mt-3 w-full text-center text-xs text-red-400 hover:text-red-600 transition">
+        Refazer o questionário
+      </button>
+    </div>
+  </div>
+
+  {# NÃO OBRIGADO #}
+  <div x-show="resultado === 'nao_obrigado'" x-transition>
+    <div class="bg-green-50 border border-green-200 rounded-2xl p-6 md:p-8">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-green-800">Boa notícia! Você não é obrigado a declarar</h2>
+          <p class="text-sm text-green-600 mt-0.5">Baseado nas suas respostas, nenhum critério de obrigatoriedade se aplica ao ano-base 2024</p>
+        </div>
+      </div>
+
+      <div class="bg-white bg-opacity-60 rounded-xl px-4 py-3 text-sm text-green-700 mb-5">
+        <strong>Vale a pena declarar mesmo assim?</strong> Sim, se você teve imposto retido na fonte
+        (pelo empregador ou banco) — a declaração pode gerar <strong>restituição</strong> desses valores.
+      </div>
+
+      {% if not user.is_authenticated %}
+      <a href="{% url 'registro' %}"
+         class="block text-center border border-green-300 text-green-700 px-6 py-3 rounded-xl text-sm font-semibold hover:bg-green-100 transition mb-3">
+        Criar conta grátis e verificar restituição
+      </a>
+      {% endif %}
+
+      <button @click="reiniciar()" class="w-full text-center text-xs text-green-400 hover:text-green-600 transition">
+        Refazer o questionário
+      </button>
+    </div>
+  </div>
+
+  <p class="text-center text-xs text-gray-400 mt-6">
+    Baseado nas regras da Receita Federal para a DIRPF 2025 (ano-base 2024). Em caso de dúvida, consulte um contador.
+  </p>
+
+</div>
+{% endblock %}
