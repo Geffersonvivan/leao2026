@@ -68,6 +68,7 @@ class PerfilFiscal(models.Model):
     tem_dependentes = models.BooleanField(default=False)
     tem_imoveis = models.BooleanField(default=False)
     tem_investimentos = models.BooleanField(default=False)
+    tem_dividas = models.BooleanField(default=False)
     tem_exterior = models.BooleanField(default=False)
     atualizado_em = models.DateTimeField(auto_now=True)
 

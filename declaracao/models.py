@@ -79,6 +79,9 @@ class Rendimento(models.Model):
         ('outros_tributaveis', 'Outros Tributáveis'),
         ('isento', 'Isento / Não Tributável'),
         ('exclusivo_fonte', 'Tributado Exclusivamente na Fonte'),
+        ('dividendo', 'Dividendos de Ações/FIIs (Isento)'),
+        ('jcp', 'JCP — Juros sobre Capital Próprio (Exclusivo na Fonte)'),
+        ('rendimento_fii', 'Rendimentos de FII (Isento)'),
     ]
 
     declaracao = models.ForeignKey(Declaracao, on_delete=models.CASCADE, related_name='rendimentos')

@@ -62,7 +62,7 @@ def calcular_modelo_completo(declaracao) -> dict:
     rendimentos_tributaveis = sum(
         (r.valor_bruto
          for r in declaracao.rendimentos.all()
-         if r.tipo not in ('isento', 'exclusivo_fonte')),
+         if r.tipo not in TIPOS_TRIBUTACAO_EXCLUSIVA),
         Decimal('0'),
     )
 
@@ -109,7 +109,7 @@ def calcular_modelo_simplificado(declaracao) -> dict:
     rendimentos_tributaveis = sum(
         (r.valor_bruto
          for r in declaracao.rendimentos.all()
-         if r.tipo not in ('isento', 'exclusivo_fonte')),
+         if r.tipo not in TIPOS_TRIBUTACAO_EXCLUSIVA),
         Decimal('0'),
     )
 
@@ -151,10 +151,19 @@ def recomendar_modelo(declaracao) -> dict:
     }
 
 
+TIPOS_TRIBUTACAO_EXCLUSIVA = frozenset({
+    'isento', 'exclusivo_fonte', 'jcp', 'dividendo', 'rendimento_fii',
+})
+
 def calcular_ir_retido_total(declaracao) -> Decimal:
-    """Soma de todo o IR retido na fonte ao longo do ano."""
+    """
+    Soma o IR retido apenas dos rendimentos que são adiantamento do ajuste anual.
+    Tipos de tributação exclusiva/definitiva (JCP, dividendos, etc.) têm imposto
+    já encerrado na fonte e não entram no confronto IR devido × IR retido.
+    """
     return _arredondar(sum(
         r.ir_retido for r in declaracao.rendimentos.all()
+        if r.tipo not in TIPOS_TRIBUTACAO_EXCLUSIVA
     ))
 
 

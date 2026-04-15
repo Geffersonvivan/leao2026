@@ -10,7 +10,7 @@ from decimal import Decimal
 
 from usuarios.models import PerfilFiscal
 from .models import Declaracao, Rendimento, Dependente, Deducao, BemDireito, VideoAjuda
-from .calculadora import recomendar_modelo, calcular_resultado_final
+from .calculadora import recomendar_modelo, calcular_resultado_final, TIPOS_TRIBUTACAO_EXCLUSIVA
 
 PASSOS = [
     {'numero': 1, 'nome': 'Perfil'},
@@ -59,6 +59,7 @@ def passo1_perfil(request, pk):
         perfil.tem_dependentes   = 'tem_dependentes' in request.POST
         perfil.tem_imoveis       = 'tem_imoveis' in request.POST
         perfil.tem_investimentos = 'tem_investimentos' in request.POST
+        perfil.tem_dividas       = 'tem_dividas' in request.POST
         perfil.save()
         return redirect('wizard_passo2', pk=pk)
 
@@ -106,6 +107,7 @@ def passo2_rendimentos(request, pk):
 
     ctx = _ctx(declaracao, 2, 'Rendimentos')
     ctx['rendimentos'] = declaracao.rendimentos.all()
+    ctx['perfil'] = getattr(request.user, 'perfil_fiscal', None)
     ctx.update(_importacao_ctx(declaracao, request))
     return render(request, 'declaracao/wizard/passo2_rendimentos.html', ctx)
 
@@ -341,7 +343,7 @@ def _gerar_alertas(declaracao, resultado):
     # PGBL acima do limite de 12%
     renda_tributavel = sum(
         r.valor_bruto for r in declaracao.rendimentos.all()
-        if r.tipo not in ('isento', 'exclusivo_fonte')
+        if r.tipo not in TIPOS_TRIBUTACAO_EXCLUSIVA
     )
     pgbl_total = sum(d.valor for d in declaracao.deducoes.filter(tipo='pgbl'))
     limite_pgbl = renda_tributavel * Decimal('0.12')

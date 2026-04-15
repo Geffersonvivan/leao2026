@@ -26,6 +26,20 @@
 </p>
 {% endif %}
 
+{% if perfil.tem_investimentos %}
+<div class="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-5 text-sm text-amber-800">
+  <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/>
+  </svg>
+  <span>
+    Você marcou que tem investimentos. Se recebeu <strong>dividendos</strong>, <strong>JCP</strong> ou
+    <strong>rendimentos de FII</strong> em {{ declaracao.ano_base }}, adicione-os aqui — estão isentos
+    ou tributados exclusivamente na fonte, mas precisam ser declarados.
+  </span>
+</div>
+{% endif %}
+
 {# Lista de rendimentos já adicionados #}
 {% if rendimentos %}
 <div class="mb-5 space-y-2">
@@ -81,6 +95,11 @@
               <option value="outros_tributaveis" {% if r.tipo == "outros_tributaveis" %}selected{% endif %}>Outros Tributáveis</option>
               <option value="isento" {% if r.tipo == "isento" %}selected{% endif %}>Isento / Não Tributável</option>
               <option value="exclusivo_fonte" {% if r.tipo == "exclusivo_fonte" %}selected{% endif %}>Exclusivo na Fonte</option>
+              <optgroup label="Proventos de Investimentos">
+                <option value="dividendo" {% if r.tipo == "dividendo" %}selected{% endif %}>Dividendos de Ações/FIIs (Isento)</option>
+                <option value="jcp" {% if r.tipo == "jcp" %}selected{% endif %}>JCP — Juros sobre Capital Próprio (Exclusivo na Fonte)</option>
+                <option value="rendimento_fii" {% if r.tipo == "rendimento_fii" %}selected{% endif %}>Rendimentos de FII (Isento)</option>
+              </optgroup>
             </select>
           </div>
           <div>
@@ -104,7 +123,7 @@
               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand">
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">INSS retido (R$)</label>
+            <label class="block text-xs font-medium text-gray-600 mb-1">INSS Retido (R$) <span class="font-normal text-gray-400">— Contribuição Previdenciária Oficial</span></label>
             <input type="number" name="inss_retido" step="0.01" value="{{ r.inss_retido }}"
               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand">
           </div>
@@ -170,6 +189,11 @@
             <option value="outros_tributaveis">Outros Tributáveis</option>
             <option value="isento">Isento / Não Tributável</option>
             <option value="exclusivo_fonte">Tributado Exclusivamente na Fonte</option>
+            <optgroup label="Proventos de Investimentos">
+              <option value="dividendo">Dividendos de Ações/FIIs (Isento)</option>
+              <option value="jcp">JCP — Juros sobre Capital Próprio (Exclusivo na Fonte)</option>
+              <option value="rendimento_fii">Rendimentos de FII (Isento)</option>
+            </optgroup>
           </select>
         </div>
         <div>
@@ -196,7 +220,7 @@
             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand">
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">INSS retido (R$)</label>
+          <label class="block text-xs font-medium text-gray-600 mb-1">INSS Retido (R$) <span class="font-normal text-gray-400">— Contribuição Previdenciária Oficial</span></label>
           <input type="number" name="inss_retido" step="0.01" min="0" value="0"
             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand">
         </div>

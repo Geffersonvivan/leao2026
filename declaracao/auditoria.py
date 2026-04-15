@@ -19,6 +19,7 @@ from .calculadora import (
     DEDUCAO_DEPENDENTE_ANUAL,
     LIMITE_DEDUCAO_EDUCACAO,
     ISENCAO_MENSAL_ACOES,
+    TIPOS_TRIBUTACAO_EXCLUSIVA,
     recomendar_modelo,
     calcular_resultado_final,
 )
@@ -100,7 +101,7 @@ def _verificar_rendimentos(declaracao, rel: RelatorioAuditoria):
 
     renda_tributavel = sum(
         r.valor_bruto for r in rendimentos
-        if r.tipo not in ('isento', 'exclusivo_fonte')
+        if r.tipo not in TIPOS_TRIBUTACAO_EXCLUSIVA
     )
     ir_retido_total = sum(r.ir_retido for r in rendimentos)
 
@@ -195,7 +196,7 @@ def _verificar_deducoes(declaracao, rel: RelatorioAuditoria):
     # PGBL acima de 12% da renda
     renda_tributavel = sum(
         r.valor_bruto for r in declaracao.rendimentos.all()
-        if r.tipo not in ('isento', 'exclusivo_fonte')
+        if r.tipo not in TIPOS_TRIBUTACAO_EXCLUSIVA
     )
     pgbl = sum(d.valor for d in deducoes if d.tipo == 'pgbl')
     if pgbl > 0 and renda_tributavel > 0:
@@ -289,7 +290,7 @@ def _verificar_bens(declaracao, rel: RelatorioAuditoria):
     # Bens com variação patrimonial incompatível com a renda
     renda_total = sum(
         r.valor_bruto for r in declaracao.rendimentos.all()
-        if r.tipo not in ('isento', 'exclusivo_fonte')
+        if r.tipo not in TIPOS_TRIBUTACAO_EXCLUSIVA
     )
     aquisicoes = sum(
         max(b.valor_atual - b.valor_anterior, Decimal('0')) for b in bens
@@ -310,7 +311,7 @@ def _verificar_bens(declaracao, rel: RelatorioAuditoria):
 def _verificar_consistencia_geral(declaracao, rel: RelatorioAuditoria):
     renda_tributavel = sum(
         r.valor_bruto for r in declaracao.rendimentos.all()
-        if r.tipo not in ('isento', 'exclusivo_fonte')
+        if r.tipo not in TIPOS_TRIBUTACAO_EXCLUSIVA
     )
 
     # Obrigatoriedade de declarar

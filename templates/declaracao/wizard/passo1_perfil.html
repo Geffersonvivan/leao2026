@@ -47,6 +47,11 @@
         {% if perfil.tem_investimentos %}checked{% endif %}>
       <span class="text-sm text-gray-700">Tenho investimentos</span>
     </label>
+    <label class="flex items-center gap-3 p-4 rounded-xl border border-gray-100 cursor-pointer hover:bg-gray-50">
+      <input type="checkbox" name="tem_dividas" class="accent-brand w-4 h-4"
+        {% if perfil.tem_dividas %}checked{% endif %}>
+      <span class="text-sm text-gray-700">Tenho dívidas / financiamentos</span>
+    </label>
   </div>
 
   <div class="flex justify-end">
